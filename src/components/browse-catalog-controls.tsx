@@ -1,23 +1,9 @@
 "use client";
 
 import { ChevronDown, Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { BrowseSort } from "~/features/browse/catalog";
-
-const sortOptions: Array<{ value: BrowseSort; label: string }> = [
-  { value: "recent_desc", label: "Newest" },
-  { value: "recent_asc", label: "Oldest" },
-  { value: "stars_desc", label: "Most Stars" },
-  { value: "stars_asc", label: "Least Stars" },
-  { value: "name_asc", label: "Name (A-Z)" },
-];
-
-const minStarOptions = [
-  { value: 0, label: "Any" },
-  { value: 10, label: "10+" },
-  { value: 100, label: "100+" },
-  { value: 1000, label: "1,000+" },
-];
 
 export interface BrowseCatalogControlsProps {
   minStars: number;
@@ -36,11 +22,26 @@ export function BrowseCatalogControls({
   searchInput,
   sort,
 }: BrowseCatalogControlsProps) {
+  const t = useTranslations("browse.controls");
+  const sortOptions: Array<{ value: BrowseSort; label: string }> = [
+    { value: "recent_desc", label: t("sortNewest") },
+    { value: "recent_asc", label: t("sortOldest") },
+    { value: "stars_desc", label: t("sortMostStars") },
+    { value: "stars_asc", label: t("sortLeastStars") },
+    { value: "name_asc", label: t("sortName") },
+  ];
+
+  const minStarOptions = [
+    { value: 0, label: t("minStarsAny") },
+    { value: 10, label: "10+" },
+    { value: 100, label: "100+" },
+    { value: 1000, label: "1,000+" },
+  ];
   return (
     <div className="browse-controls neo-panel grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-4 rounded-lg p-4 md:grid-cols-[minmax(0,1fr)_220px_180px] md:gap-5 md:p-6">
       <label className="col-span-2 flex min-w-0 flex-col gap-2 md:col-span-1">
         <span className="text-xs font-semibold tracking-[0.1em] text-black uppercase dark:text-[hsl(var(--foreground))]">
-          Search Repositories
+          {t("searchLabel")}
         </span>
         <span className="relative block">
           <Search
@@ -51,7 +52,7 @@ export function BrowseCatalogControls({
             type="search"
             value={searchInput}
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search owner/repo"
+            placeholder={t("searchPlaceholder")}
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
@@ -62,7 +63,7 @@ export function BrowseCatalogControls({
 
       <label className="flex min-w-0 flex-col gap-2">
         <span className="text-xs font-semibold tracking-[0.1em] text-black uppercase dark:text-[hsl(var(--foreground))]">
-          Sort
+          {t("sortLabel")}
         </span>
         <span className="relative block">
           <select
@@ -85,12 +86,12 @@ export function BrowseCatalogControls({
 
       <label className="flex min-w-0 flex-col gap-2">
         <span className="text-xs font-semibold tracking-[0.1em] text-black uppercase dark:text-[hsl(var(--foreground))]">
-          <span className="sm:hidden">Min. stars</span>
-          <span className="hidden sm:inline">Minimum Stars</span>
+          <span className="sm:hidden">{t("minStarsShort")}</span>
+          <span className="hidden sm:inline">{t("minStars")}</span>
         </span>
         <span className="relative block">
           <select
-            aria-label="Minimum Stars"
+            aria-label={t("minStars")}
             value={String(minStars)}
             onChange={(event) =>
               onMinStarsChange(Number.parseInt(event.target.value, 10))

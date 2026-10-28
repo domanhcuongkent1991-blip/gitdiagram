@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { CircleAlert, LockKeyhole, Pause } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { DiagramStreamState } from "~/features/diagram/types";
 import { githubAccessTitle } from "~/features/diagram/github-access";
 import { ActivityMark } from "./activity-mark";
@@ -23,6 +24,7 @@ export function GenerationFeedback({
   hasPrevious?: boolean;
   recovery?: ReactNode;
 }) {
+  const t = useTranslations("generation");
   const { seconds, now } = useGenerationClock({
     running: active,
     paused: false,
@@ -34,6 +36,7 @@ export function GenerationFeedback({
     renderFailed,
     seconds,
     now,
+    t,
   );
   return (
     <div className={styles.feedback}>
@@ -60,7 +63,7 @@ export function GenerationFeedback({
         {!failed && (
           <span
             className={styles.elapsed}
-            aria-label={`${seconds} seconds elapsed`}
+            aria-label={t("secondsElapsed", { seconds })}
           >
             {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, "0")}
           </span>
@@ -68,7 +71,7 @@ export function GenerationFeedback({
       </div>
       {description && <p className={styles.description}>{description}</p>}
       {hasPrevious && (
-        <p className={styles.previousLabel}>Showing previous diagram</p>
+        <p className={styles.previousLabel}>{t("showingPrevious")}</p>
       )}
       {failed && recovery && <div className={styles.recovery}>{recovery}</div>}
       <ExpandedActivity key={state.startedAt ?? "stored"} state={state} />

@@ -1,13 +1,14 @@
 import { ChevronDown } from "lucide-react";
+import { getLocale, getTranslations } from "next-intl/server";
 import type { DiagramReadout } from "~/features/diagram/readout";
 import { architectureLines } from "./architecture-prose";
 import theme from "./workspace.module.css";
 import styles from "./readout.module.css";
 
-function formatDate(value: string | null): string | null {
+function formatDate(value: string | null, locale: string): string | null {
   const time = value ? Date.parse(value) : NaN;
   return Number.isFinite(time)
-    ? new Date(time).toLocaleDateString("en-US", {
+    ? new Date(time).toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -23,7 +24,7 @@ function formatDate(value: string | null): string | null {
  * Hidden while the stored diagram is still being drawn and after a new run on
  * the page (readout.module.css), so the first screen is unchanged.
  */
-export function RepositoryReadout({
+export async function RepositoryReadout({
   repository,
   readout,
   markdownPath,
@@ -32,7 +33,9 @@ export function RepositoryReadout({
   readout: DiagramReadout;
   markdownPath: string;
 }) {
-  const date = formatDate(readout.lastSuccessfulAt);
+  const t = await getTranslations("generation.readout");
+  const locale = await getLocale();
+  const date = formatDate(readout.lastSuccessfulAt, locale);
   return (
     <section
       className={`${theme.controlsTheme} ${styles.readout}`}
@@ -40,7 +43,7 @@ export function RepositoryReadout({
       data-repository-readout
     >
       <h2 id="repository-readout-title" className={styles.title}>
-        How {repository} works
+        {t("howWorks", { repository })}
       </h2>
       {readout.explanation && (
         <div className={styles.prose}>
@@ -50,7 +53,7 @@ export function RepositoryReadout({
       {readout.groups.length > 0 && (
         <details className={styles.details}>
           <summary>
-            Components{" "}
+            {t("components")}{" "}
             <span className={styles.count}>{readout.componentCount}</span>
             <ChevronDown size={12} aria-hidden="true" />
           </summary>
@@ -91,7 +94,7 @@ export function RepositoryReadout({
       {readout.connections.length > 0 && (
         <details className={styles.details}>
           <summary>
-            Connections{" "}
+            {t("connections")}{" "}
             <span className={styles.count}>{readout.connections.length}</span>
             <ChevronDown size={12} aria-hidden="true" />
           </summary>
@@ -100,7 +103,7 @@ export function RepositoryReadout({
               {readout.connections.map((connection, index) => (
                 <li key={index}>
                   <strong>{connection.from}</strong>
-                  <span aria-label="to"> → </span>
+                  <span aria-label={t("to")}> → </span>
                   <strong>{connection.to}</strong>
                   {connection.label && <>: {connection.label}</>}
                   {connection.description && <> · {connection.description}</>}
@@ -117,17 +120,18 @@ export function RepositoryReadout({
         </details>
       )}
       <p className={styles.meta}>
-        Drawn by GitDiagram
-        {date && (
-          <>
-            {" "}
-            on{" "}
-            <time dateTime={readout.lastSuccessfulAt ?? undefined}>{date}</time>
-          </>
-        )}{" "}
-        from the repository&apos;s file tree, README and source files.{" "}
+        {date
+          ? t.rich("metaWithDate", {
+              date,
+              time: (chunks) => (
+                <time dateTime={readout.lastSuccessfulAt ?? undefined}>
+                  {chunks}
+                </time>
+              ),
+            })
+          : t("metaNoDate")}{" "}
         <a href={markdownPath} type="text/markdown">
-          Read as Markdown
+          {t("readAsMarkdown")}
         </a>
       </p>
     </section>

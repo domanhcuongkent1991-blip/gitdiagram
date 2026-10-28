@@ -8,9 +8,9 @@ import { JsonLd } from "~/components/json-ld";
 import HomePage from "./page";
 
 describe("home page", () => {
-  it("describes GitDiagram as a free web application with the URL trick", () => {
+  it("describes GitDiagram as a free web application with the URL trick", async () => {
     const children = (
-      HomePage().props as { children: ReactNode[] }
+      (await HomePage()).props as { children: ReactNode[] }
     ).children.filter(isValidElement);
     const script = children.find((child) => child.type === JsonLd) as
       | ReactElement<{ data: { "@graph": Array<Record<string, unknown>> } }>

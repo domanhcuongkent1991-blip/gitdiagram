@@ -52,8 +52,7 @@ export const viewport: Viewport = {
   themeColor: "#f2e8ff",
 };
 
-// A fresh shuffle of the most-starred videos every five minutes.
-export const revalidate = 300;
+// i18n: rendered per-request since the layout reads the locale cookie.
 
 /**
  * The most-starred videos. As on /videos, a failed read throws (so the last

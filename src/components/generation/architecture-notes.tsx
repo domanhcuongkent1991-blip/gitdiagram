@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useEffect, useId, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ArrowDown, ChevronDown, FileText } from "lucide-react";
 import { architectureLines } from "./architecture-prose";
 import styles from "./generation.module.css";
@@ -15,6 +16,7 @@ export const ArchitectureNotes = memo(function ArchitectureNotes({
   initiallyExpanded?: boolean;
 }) {
   const id = useId();
+  const t = useTranslations("generation");
   const paneRef = useRef<HTMLDivElement>(null);
   const followingRef = useRef(true);
   const [following, setFollowing] = useState(true);
@@ -34,15 +36,19 @@ export const ArchitectureNotes = memo(function ArchitectureNotes({
       <button
         type="button"
         className={styles.notesToggle}
-        aria-label="Architecture overview"
+        aria-label={t("notes.title")}
         aria-expanded={expanded}
         aria-controls={id}
         onClick={() => setExpanded((value) => !value)}
       >
         <FileText size={15} aria-hidden="true" />
-        <span>Architecture overview</span>
+        <span>{t("notes.title")}</span>
         <span className={styles.notesState}>
-          {text ? (streaming ? "Live" : "Read") : "Up next"}
+          {text
+            ? streaming
+              ? t("notes.live")
+              : t("notes.read")
+            : t("notes.upNext")}
         </span>
         <ChevronDown size={15} className={styles.chevron} aria-hidden="true" />
       </button>
@@ -53,7 +59,7 @@ export const ArchitectureNotes = memo(function ArchitectureNotes({
             className={styles.notesBody}
             data-testid="generation-stream"
             role="region"
-            aria-label="Architecture overview"
+            aria-label={t("notes.title")}
             tabIndex={text ? 0 : -1}
             onScroll={(event) => {
               const pane = event.currentTarget;
@@ -72,9 +78,7 @@ export const ArchitectureNotes = memo(function ArchitectureNotes({
               </div>
             ) : (
               <div className={styles.notesEmpty}>
-                <p>
-                  A live overview will appear here as we analyze the repository.
-                </p>
+                <p>{t("notes.empty")}</p>
               </div>
             )}
           </div>
@@ -90,7 +94,7 @@ export const ArchitectureNotes = memo(function ArchitectureNotes({
                 paneRef.current.scrollTop = paneRef.current.scrollHeight;
             }}
           >
-            <ArrowDown size={13} aria-hidden="true" /> Follow latest
+            <ArrowDown size={13} aria-hidden="true" /> {t("notes.follow")}
           </button>
         )}
       </div>

@@ -150,6 +150,11 @@ describe("VideoCatalog", () => {
     expect(
       await screen.findByText("No videos match these filters"),
     ).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Try a broader search or lower the minimum star filter.",
+      ),
+    ).toBeTruthy();
   });
 
   it("restores the query from the URL and pages through results", async () => {
@@ -202,6 +207,7 @@ describe("VideoCatalog", () => {
     });
     expect(await screen.findByRole("alert")).toBeTruthy();
     expect(screen.getByText("The videos could not be loaded")).toBeTruthy();
+    expect(screen.getByText("Try again in a moment.")).toBeTruthy();
   });
 
   it("invites the first video when there are none", () => {

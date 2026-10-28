@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronDown, GitBranch } from "lucide-react";
 import type { DiagramGraph } from "~/features/diagram/graph";
 import { connectionRows, evidenceUrl } from "./connection-rows";
@@ -19,6 +20,7 @@ export function DiagramConnections({
   repository: string;
 }) {
   const id = useId();
+  const t = useTranslations("generation");
   const [expanded, setExpanded] = useState(false);
   const rows = connectionRows(graph);
   if (!rows.length) return null;
@@ -38,25 +40,24 @@ export function DiagramConnections({
         onClick={() => setExpanded((value) => !value)}
       >
         <GitBranch size={15} aria-hidden="true" />
-        <span>Connections</span>
+        <span>{t("connections.title")}</span>
         <span className={notes.notesState}>
           {unchecked
-            ? `${rows.length}, not checked`
-            : `${cited}/${rows.length} with evidence`}
+            ? t("connections.uncheckedCount", { count: rows.length })
+            : t("connections.evidenceCount", { cited, total: rows.length })}
         </span>
         <ChevronDown size={15} className={notes.chevron} aria-hidden="true" />
       </button>
       <div id={id} hidden={!expanded}>
         {expanded && unchecked && (
           <p className={`${notes.prose} ${styles.note}`}>
-            This diagram was made before GitDiagram checked connections against
-            the code. Regenerate it to see the file behind each arrow.
+            {t("connections.preCheck")}
           </p>
         )}
         {expanded && (
           <ul
             className={`${notes.notesBody} ${notes.prose} ${styles.list}`}
-            aria-label="Connections"
+            aria-label={t("connections.title")}
           >
             {rows.map((row) => {
               const url = row.evidencePath
@@ -65,18 +66,21 @@ export function DiagramConnections({
               return (
                 <li key={row.key}>
                   <strong>{row.from}</strong>
-                  <span aria-label="to"> → </span>
+                  <span aria-label={t("connections.to")}> → </span>
                   <strong>{row.to}</strong>
                   {row.label && `: ${row.label}`}
                   {row.dashed && (
-                    <span className={styles.dashed}> (dashed)</span>
+                    <span className={styles.dashed}>
+                      {" "}
+                      {t("connections.dashed")}
+                    </span>
                   )}
                   {!unchecked && (
                     <span className={styles.evidence}>
                       {" — "}
                       {row.evidencePath ? (
                         <>
-                          evidence:{" "}
+                          {t("connections.evidenceLabel")}{" "}
                           {url ? (
                             <a
                               href={url}
@@ -91,7 +95,7 @@ export function DiagramConnections({
                         </>
                       ) : (
                         <span className={styles.unverified}>
-                          no file cited; inferred
+                          {t("connections.inferred")}
                         </span>
                       )}
                     </span>

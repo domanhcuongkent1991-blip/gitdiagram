@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { countryName, flag, tally } from "~/features/admin/format";
 import type { LiveVisitor } from "~/features/admin/types";
@@ -25,6 +26,7 @@ function CountryList({
   mismatched: ReadonlySet<string>;
 }) {
   const [open, setOpen] = useState<Set<string>>(() => new Set());
+  const t = useTranslations("admin");
   const countries = useMemo(() => {
     const byCountry = new Map<string, LiveVisitor[]>();
     for (const person of people) {
@@ -39,15 +41,18 @@ function CountryList({
         mismatch: here.filter((person) => mismatched.has(person.id)).length,
         cities: tally(
           here,
-          (v) => [v.ct, v.r].filter(Boolean).join(", ") || "Unknown",
+          (v) =>
+            [v.ct, v.r].filter(Boolean).join(", ") || t("audience.unknown"),
           Number.POSITIVE_INFINITY,
         ),
       }))
       .sort((a, b) => b.count - a.count || a.code.localeCompare(b.code));
-  }, [people, mismatched]);
+  }, [people, mismatched, t]);
   if (!countries.length)
     return (
-      <p className="text-sm text-[hsl(var(--neo-soft-text))]">Nobody yet.</p>
+      <p className="text-sm text-[hsl(var(--neo-soft-text))]">
+        {t("barList.nobody")}
+      </p>
     );
   const max = Math.max(1, countries[0]!.count);
   const toggle = (code: string) =>
@@ -79,9 +84,9 @@ function CountryList({
                 {mismatch ? (
                   <span
                     className="ml-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300"
-                    title="Browser clock set to a different time zone from this location: often a VPN, sometimes a traveller or a carrier network"
+                    title={t("people.mismatchTitle")}
                   >
-                    {mismatch} clock/IP mismatch
+                    {t("audience.mismatch", { count: mismatch })}
                   </span>
                 ) : null}
                 <span className="ml-1.5 text-xs text-[hsl(var(--neo-soft-text))]">
@@ -125,31 +130,35 @@ export const AudiencePanels = memo(function AudiencePanels({
   mismatched: ReadonlySet<string>;
 }) {
   const pages = useMemo(() => tally(people, (v) => v.p, 8), [people]);
+  const t = useTranslations("admin");
   const sources = useMemo(
     () =>
       tally(
         people,
-        (v) => (!v.ref || /gitdiagram\.com$/.test(v.ref) ? "Direct" : v.ref),
+        (v) =>
+          !v.ref || /gitdiagram\.com$/.test(v.ref)
+            ? t("audience.direct")
+            : v.ref,
         6,
       ),
-    [people],
+    [people, t],
   );
   const countryCount = new Set(people.map((v) => v.c)).size;
   return (
     <div className="grid gap-6 md:grid-cols-3">
       <Panel
-        title="Pages"
-        aside={`${people.length} ${people.length === 1 ? "person" : "people"}`}
+        title={t("audience.pages")}
+        aside={t("audience.people", { count: people.length })}
       >
         <BarList rows={pages} />
       </Panel>
       <Panel
-        title="Countries"
-        aside={`${countryCount} ${countryCount === 1 ? "country" : "countries"}`}
+        title={t("audience.countries")}
+        aside={t("audience.countryCount", { count: countryCount })}
       >
         <CountryList people={people} mismatched={mismatched} />
       </Panel>
-      <Panel title="Came from">
+      <Panel title={t("audience.cameFrom")}>
         <BarList rows={sources} />
       </Panel>
     </div>

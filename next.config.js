@@ -1,3 +1,5 @@
+import createNextIntlPlugin from "next-intl/plugin";
+
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 // The live-presence worker (workers/presence): every tab holds one socket to it.
@@ -221,4 +223,6 @@ const config = {
   skipTrailingSlashRedirect: true,
 };
 
-export default config;
+const withNextIntl = createNextIntlPlugin();
+
+export default withNextIntl(config);

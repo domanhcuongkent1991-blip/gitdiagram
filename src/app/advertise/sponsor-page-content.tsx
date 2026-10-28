@@ -1,6 +1,7 @@
 import { ArrowDown } from "lucide-react";
 import Image from "next/image";
-import type { CSSProperties } from "react";
+import { getTranslations } from "next-intl/server";
+import type { CSSProperties, ReactNode } from "react";
 import { SponsorEmailActions } from "./sponsor-email-actions";
 import { SponsorPlacementPreview } from "./sponsor-placement-preview";
 import {
@@ -9,7 +10,7 @@ import {
   SPONSOR_EMAIL_ADDRESS,
   SPONSOR_PRICE,
   SPONSOR_EXCLUSIVE_PRICE,
-  sponsorFits,
+  sponsorFitKeys,
   type SponsorContent,
   type SponsorMetric,
 } from "./sponsor-content";
@@ -19,7 +20,7 @@ function AudienceMetrics({
   title,
   metrics,
 }: {
-  title: string;
+  title: ReactNode;
   metrics: SponsorMetric[];
 }) {
   return (
@@ -38,34 +39,40 @@ function AudienceMetrics({
   );
 }
 
-export function SponsorPageContent({ content }: { content: SponsorContent }) {
+export async function SponsorPageContent({
+  content,
+}: {
+  content: SponsorContent;
+}) {
+  const t = await getTranslations("advertise");
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
         <h1>
-          Bring developers
+          {t("heroTitle1")}
           <br />
-          <span>to your product.</span>
+          <span>{t("heroTitle2")}</span>
         </h1>
         <p className={styles.introduction}>
           {content.audience && (
             <>
-              GitDiagram had{" "}
-              <strong>
-                {content.audience.monthlyVisitors} unique visitors
-              </strong>{" "}
-              in the last 30 days.{" "}
+              {t.rich("introVisitors", {
+                count: content.audience.monthlyVisitors,
+                strong: (chunks: ReactNode) => <strong>{chunks}</strong>,
+              })}{" "}
             </>
           )}
-          Reach developers as they explore GitHub repositories, with placements
-          that link directly to your website.
+          {t("introRest")}
         </p>
         <p className={styles.offerSummary}>
           <span>
-            From <strong>{SPONSOR_PRICE} USD</strong> · 30 days
+            {t.rich("offerFrom", {
+              price: SPONSOR_PRICE,
+              strong: (chunks: ReactNode) => <strong>{chunks}</strong>,
+            })}
           </span>
           <span className={styles.offerSummaryDetails}>
-            Shared or exclusive placements
+            {t("offerVariants")}
           </span>
         </p>
         <p className={styles.availability}>{content.availability}</p>
@@ -75,12 +82,12 @@ export function SponsorPageContent({ content }: { content: SponsorContent }) {
             mailto={SPONSOR_EMAIL}
           />
           <a href="#sponsor-placements" className={styles.textLink}>
-            See the placements
+            {t("seePlacements")}
             <ArrowDown aria-hidden="true" />
           </a>
         </div>
         <div className={styles.advertisers}>
-          <p id="advertisers-label">GitDiagram has run campaigns for:</p>
+          <p id="advertisers-label">{t("hasRunCampaignsFor")}</p>
           <ul aria-labelledby="advertisers-label">
             {advertisers.map(({ name, href, src, darkSrc, width, height }) => {
               const size = {
@@ -127,41 +134,36 @@ export function SponsorPageContent({ content }: { content: SponsorContent }) {
         className={styles.audience}
         aria-labelledby="audience-title"
       >
-        <h2 id="audience-title">Audience</h2>
+        <h2 id="audience-title">{t("audienceTitle")}</h2>
         {content.audience ? (
           <div className={styles.audienceColumns}>
             <AudienceMetrics
-              title="Last 30 days"
+              title={t("last30")}
               metrics={content.audience.monthly}
             />
             <AudienceMetrics
-              title="Lifetime"
+              title={t("lifetime")}
               metrics={content.audience.lifetime}
             />
           </div>
         ) : (
           <p className={styles.statsError} role="status">
-            The audience figures could not be loaded from PostHog right now.
-            They retry every few minutes; email Ahmed for current numbers.
+            {t("statsError")}
           </p>
         )}
         <div className={styles.dataNote}>
           <p>
-            Source: PostHog and GitHub.
+            {t("source")}
             {content.audience && (
               <>
                 {" "}
                 <time dateTime={content.audience.asOf}>
-                  Updated {content.audience.updatedAt}.
+                  {t("updated", { time: content.audience.updatedAt })}
                 </time>
               </>
             )}
           </p>
-          <p>
-            Figures refresh about every hour, lifetime totals daily. The 30-day
-            window ends at the time shown. Visitors are unique within each
-            window. Pageviews measure site traffic, not ad impressions.
-          </p>
+          <p>{t("dataNote")}</p>
         </div>
       </section>
 
@@ -170,7 +172,7 @@ export function SponsorPageContent({ content }: { content: SponsorContent }) {
         id="sponsor-placements"
         aria-labelledby="placements-title"
       >
-        <h2 id="placements-title">Placements</h2>
+        <h2 id="placements-title">{t("placementsTitle")}</h2>
         <div>
           <div className={styles.placements}>
             {content.surfaces.map((surface) => (
@@ -191,30 +193,22 @@ export function SponsorPageContent({ content }: { content: SponsorContent }) {
               </article>
             ))}
           </div>
-          <p className={styles.placementNote}>
-            Pageviews are from the same 30-day window.
-          </p>
+          <p className={styles.placementNote}>{t("placementsNote")}</p>
         </div>
       </section>
 
       <section className={styles.detailSection} aria-labelledby="fit-title">
         <div>
-          <h2 id="fit-title">Who it’s for</h2>
-          <p className={styles.sectionIntro}>
-            If your customers build software, GitDiagram is a relevant place to
-            introduce your product.
-          </p>
+          <h2 id="fit-title">{t("fitTitle")}</h2>
+          <p className={styles.sectionIntro}>{t("fitIntro")}</p>
         </div>
         <div>
           <ul className={styles.fitList}>
-            {sponsorFits.map((fit) => (
-              <li key={fit}>{fit}</li>
+            {sponsorFitKeys.map((fit) => (
+              <li key={fit}>{t(`fits.${fit}`)}</li>
             ))}
           </ul>
-          <p className={styles.privacy}>
-            Advertising is clearly labeled, with no third-party ad scripts,
-            tracking pixels, or popups.
-          </p>
+          <p className={styles.privacy}>{t("fitPrivacy")}</p>
         </div>
       </section>
 
@@ -252,32 +246,29 @@ export function SponsorPageContent({ content }: { content: SponsorContent }) {
         )}
         <div className={styles.offerHeading}>
           <div>
-            <h2 id="offer-title">Advertise for 30 days</h2>
+            <h2 id="offer-title">{t("offerTitle")}</h2>
             <p className={styles.offerDescription}>
-              {content.offerTiming} Choose a shared website spot or an exclusive
-              campaign.
+              {content.offerTiming} {t("offerTimingSuffix")}
             </p>
           </div>
         </div>
         <dl className={styles.planList}>
           <div>
-            <dt>Shared website spot</dt>
+            <dt>{t("sharedSpot")}</dt>
             <dd className={styles.planPrice}>
-              {SPONSOR_PRICE} <span>USD / 30 days</span>
+              {SPONSOR_PRICE} <span>{t("usdPer30")}</span>
             </dd>
             <dd className={styles.planDescription}>
-              Homepage, repo diagrams, and browse catalog. A 50/50 rotation with
-              one other sponsor, with one ad shown at a time. Website only.
+              {t("sharedSpotDescription")}
             </dd>
           </div>
           <div>
-            <dt>Exclusive campaign</dt>
+            <dt>{t("exclusiveSpot")}</dt>
             <dd className={styles.planPrice}>
-              {SPONSOR_EXCLUSIVE_PRICE} <span>USD / 30 days</span>
+              {SPONSOR_EXCLUSIVE_PRICE} <span>{t("usdPer30")}</span>
             </dd>
             <dd className={styles.planDescription}>
-              Your brand is the only advertiser across the homepage, repo
-              diagrams, browse catalog, and GitHub README.
+              {t("exclusiveSpotDescription")}
             </dd>
           </div>
         </dl>
@@ -287,16 +278,14 @@ export function SponsorPageContent({ content }: { content: SponsorContent }) {
               email={SPONSOR_EMAIL_ADDRESS}
               mailto={SPONSOR_EMAIL}
             />
-            <p className={styles.availability}>
-              Email Ahmed to agree on dates and creative before payment.
-            </p>
+            <p className={styles.availability}>{t("emailBeforePaymentNote")}</p>
           </div>
           <p className={styles.terms}>
-            One-time payment before launch.
+            {t("terms1")}
             <br />
-            No automatic renewal.
+            {t("terms2")}
             <br />
-            Future bookings are priced separately.
+            {t("terms3")}
           </p>
         </div>
       </section>

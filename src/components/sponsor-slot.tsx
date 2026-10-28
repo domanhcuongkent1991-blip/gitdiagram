@@ -9,6 +9,7 @@ import {
 import { sponsorCreatives, type SponsorCreative } from "~/lib/sponsor-creative";
 import { useSponsorCampaign } from "~/hooks/use-sponsor-campaign";
 import { useSponsorImpression } from "~/hooks/use-sponsor-impression";
+import { useTranslations } from "next-intl";
 import { cn } from "~/lib/utils";
 import styles from "./sponsor-slot.module.css";
 
@@ -30,6 +31,7 @@ function SponsorBanner({
   surface: WebsiteSponsorPlacement;
 }) {
   const { logo } = creative;
+  const t = useTranslations("sponsor");
   // Only count the campaign the schedule check confirmed, not a stale render.
   useSponsorImpression(confirmed ? campaignId : undefined, surface);
 
@@ -38,7 +40,10 @@ function SponsorBanner({
       href={href}
       target="_blank"
       rel="sponsored noopener noreferrer"
-      aria-label={`Sponsored by ${creative.name}: ${creative.message}`}
+      aria-label={t("sponsoredBy", {
+        name: creative.name,
+        message: creative.message,
+      })}
       className={cn(
         styles.banner,
         // A long button text leaves no room beside the logo on a small phone.
@@ -76,11 +81,11 @@ function SponsorBanner({
         <span className={styles.message}>
           {creative.message}
           <span className={styles.inlineDisclosure} aria-hidden="true">
-            Sponsored
+            {t("sponsored")}
           </span>
         </span>
         <span className={styles.end}>
-          <span className={styles.disclosure}>Sponsored</span>
+          <span className={styles.disclosure}>{t("sponsored")}</span>
           <span className={styles.action}>
             {creative.action}
             <ArrowUpRight className={styles.arrow} aria-hidden="true" />

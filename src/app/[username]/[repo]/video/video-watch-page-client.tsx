@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import controls from "~/components/generation/workspace.module.css";
 import styles from "~/components/explainer/explainer-video.module.css";
@@ -26,24 +27,22 @@ export default function VideoWatchPageClient({
   username: string;
   repo: string;
 }) {
+  const t = useTranslations("generation.videoWatch");
   return (
     <main className={`${controls.workspace} ${styles.watch}`}>
       <header className={styles.watchHead}>
         <h1 className={styles.watchTitle}>
           {username}/<strong>{repo}</strong>
         </h1>
-        <p className={styles.watchSub}>explained in about a minute</p>
+        <p className={styles.watchSub}>{t("sub")}</p>
       </header>
       <ExplainerVideo username={username} repo={repo} />
-      <nav
-        className={styles.watchLinks}
-        aria-label="More about this repository"
-      >
+      <nav className={styles.watchLinks} aria-label={t("moreNav")}>
         <Link
           href={`/${username}/${repo}`}
           className={`${controls.actionButton} ${controls.primary}`}
         >
-          Open the interactive diagram
+          {t("openDiagram")}
           <ArrowRight size={15} aria-hidden="true" />
         </Link>
         <a
@@ -53,7 +52,7 @@ export default function VideoWatchPageClient({
           className={controls.actionButton}
         >
           <ExternalLink size={15} aria-hidden="true" />
-          View on GitHub
+          {t("viewGitHub")}
         </a>
       </nav>
     </main>

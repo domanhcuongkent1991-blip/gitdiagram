@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { movesCounters } from "~/features/admin/events";
 import { hasClockMismatch, peopleHere } from "~/features/admin/presence";
@@ -96,19 +97,18 @@ export function AdminDashboard() {
     setSignOutError({
       message:
         body?.error ??
-        (response
-          ? "Could not sign out. Try again."
-          : "Could not reach GitDiagram to sign out. Check the connection and try again."),
+        (response ? t("signOutFailed") : t("signOutUnreachable")),
       everywhere,
     });
     setSigningOut(false);
   }
 
+  const t = useTranslations("admin.dashboard");
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:py-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold">Live</h1>
+          <h1 className="text-3xl font-bold">{t("title")}</h1>
           <StatusPill
             status={state?.presence ? live.status : "offline"}
             latency={live.latency}
@@ -122,10 +122,10 @@ export function AdminDashboard() {
             type="button"
             disabled={signingOut}
             onClick={() => void signOut(true)}
-            title="Signs out every browser signed in to this dashboard"
+            title={t("signOutEverywhereTitle")}
             className={`neo-button-muted h-9 rounded-md px-3 text-sm font-semibold ${TOUCH}`}
           >
-            Sign out everywhere
+            {t("signOutEverywhere")}
           </button>
           <button
             type="button"
@@ -133,7 +133,7 @@ export function AdminDashboard() {
             onClick={() => void signOut(false)}
             className={`neo-button-muted h-9 rounded-md px-3 text-sm font-semibold ${TOUCH}`}
           >
-            Sign out
+            {t("signOut")}
           </button>
         </div>
       </header>
@@ -150,7 +150,7 @@ export function AdminDashboard() {
             onClick={() => void signOut(signOutError.everywhere)}
             className={`neo-button-muted h-8 rounded-md px-3 text-xs font-semibold ${TOUCH}`}
           >
-            Try again
+            {t("tryAgain")}
           </button>
         </p>
       ) : null}
@@ -160,9 +160,7 @@ export function AdminDashboard() {
           role="alert"
           className="rounded-md border-2 border-black bg-amber-100 p-3 text-sm text-black"
         >
-          The live switches could not be read from Redis just now, so the ones
-          below may be out of date, or the defaults. New videos cannot start
-          while Redis stays unreachable.
+          {t("controlsUnreadable")}
         </p>
       ) : null}
 
@@ -171,16 +169,13 @@ export function AdminDashboard() {
           role="alert"
           className="rounded-md border-2 border-black bg-amber-100 p-3 text-sm text-black"
         >
-          The presence worker speaks a different protocol than this site. Deploy
-          it from workers/presence (bunx wrangler deploy) so the live panels
-          stay accurate.
+          {t("protocolMismatch")}
         </p>
       ) : null}
 
       {state && !state.presence ? (
         <p className="rounded-md border-2 border-black bg-amber-100 p-3 text-sm text-black">
-          Live presence is not set up here (NEXT_PUBLIC_PRESENCE_URL and
-          PRESENCE_SECRET). Counters and switches still work.
+          {t("presenceMissing")}
         </p>
       ) : null}
 

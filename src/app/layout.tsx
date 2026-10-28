@@ -2,9 +2,12 @@ import "~/styles/globals.css";
 
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import { Header } from "~/components/header";
 import { Footer } from "~/components/footer";
 import { LivePresence } from "~/components/live-presence";
+import { normalizeLocale } from "~/lib/locale";
 import { CSPostHogProvider } from "./providers";
 import { SponsorCampaignProvider } from "~/hooks/use-sponsor-campaign";
 import { renderedSponsorSchedule } from "~/lib/sponsor-campaign";
@@ -72,12 +75,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const locale = normalizeLocale(await getLocale());
+  const messages = await getMessages();
   return (
     <html
-      lang="en"
+      lang={locale}
       suppressHydrationWarning
       className={`${GeistSans.variable}`}
     >
@@ -86,14 +91,16 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: chunkReloadScript }} />
       </head>
       <body className="flex min-h-screen flex-col">
-        <CSPostHogProvider>
-          <SponsorCampaignProvider {...renderedSponsorSchedule()}>
-            <Header />
-            <div className="flex-grow">{children}</div>
-            <Footer />
-          </SponsorCampaignProvider>
-          <LivePresence />
-        </CSPostHogProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <CSPostHogProvider>
+            <SponsorCampaignProvider {...renderedSponsorSchedule()}>
+              <Header />
+              <div className="flex-grow">{children}</div>
+              <Footer />
+            </SponsorCampaignProvider>
+            <LivePresence />
+          </CSPostHogProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

@@ -21,9 +21,8 @@ type RepoPageProps = {
 };
 
 // Successful generations invalidate the page and data tag on demand. Keep
-// unchanged diagrams warm; this interval is only the fallback refresh.
-// Matches PUBLIC_DIAGRAM_STATE_REVALIDATE_SECONDS (public-diagram-state.ts).
-export const revalidate = 21600;
+// i18n: the locale cookie makes this page dynamic; diagram state still
+// revalidates separately (see PUBLIC_DIAGRAM_STATE_REVALIDATE_SECONDS).
 export const dynamicParams = true;
 
 export function generateStaticParams() {

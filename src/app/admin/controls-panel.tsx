@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Switch } from "~/components/ui/switch";
 import {
@@ -24,49 +25,68 @@ import { Panel, TOUCH } from "./ui";
 
 type Change = (patch: Partial<LiveControls>) => Promise<string | null>;
 
+/** A next-intl translator, e.g. from useTranslations("admin.controls"). */
+type ControlsTranslator = (
+  key: string,
+  values?: Record<string, string | number | Date>,
+) => string;
+
 interface Choice<T> {
   value: T;
   label: string;
   hint: string;
 }
 
-const AUDIENCES: Array<Choice<VideoAudience>> = [
+const AUDIENCES = (t: ControlsTranslator): Array<Choice<VideoAudience>> => [
   {
     value: "priority",
-    label: "Priority places",
-    hint: "Any device in the priority places below",
+    label: t("controls.audiencePriority"),
+    hint: t("controls.audiencePriorityHint"),
   },
   {
     value: "desktop",
-    label: "All desktops",
-    hint: "Priority places, plus any desktop",
+    label: t("controls.audienceDesktop"),
+    hint: t("controls.audienceDesktopHint"),
   },
-  { value: "everyone", label: "Everyone", hint: "Every device, anywhere" },
+  {
+    value: "everyone",
+    label: t("controls.audienceEveryone"),
+    hint: t("controls.audienceEveryoneHint"),
+  },
 ];
 
-const PLACES: Array<Choice<PriorityPlaces>> = [
+const PLACES = (t: ControlsTranslator): Array<Choice<PriorityPlaces>> => [
   {
     value: "cities",
-    label: "Cities",
-    hint: "CA, WA, NY, Ontario, BC, London and Paris",
+    label: t("controls.placesCities"),
+    hint: t("controls.placesCitiesHint"),
   },
   {
     value: "countries",
-    label: "US, Canada & UK",
-    hint: "All of all three, plus Paris",
+    label: t("controls.placesCountries"),
+    hint: t("controls.placesCountriesHint"),
   },
 ];
 
 const limitedAccessChoices = (
   share: number,
+  t: ControlsTranslator,
 ): Array<Choice<LimitedCountryAccess>> => [
-  { value: "blocked", label: "Blocked", hint: "No new videos from them" },
+  {
+    value: "blocked",
+    label: t("controls.limitedBlocked"),
+    hint: t("controls.limitedBlockedHint"),
+  },
   {
     value: "some",
-    label: `${share}% a day`,
-    hint: `A daily draw lets ${share}% of connections make one standard video`,
+    label: t("controls.limitedSome", { share }),
+    hint: t("controls.limitedSomeHint", { share }),
   },
-  { value: "open", label: "Open", hint: "The same rules as everywhere else" },
+  {
+    value: "open",
+    label: t("controls.limitedOpen"),
+    hint: t("controls.limitedOpenHint"),
+  },
 ];
 
 /**
@@ -168,11 +188,12 @@ function AudiencePicker({
   change: Change;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const t = useTranslations("admin");
   return (
     <>
       <ChoicePicker
-        label="Who can make new videos"
-        options={AUDIENCES}
+        label={t("controls.audienceLabel")}
+        options={AUDIENCES(t)}
         value={value}
         disabled={disabled}
         onPick={(option) => {
@@ -183,10 +204,10 @@ function AudiencePicker({
       <ConfirmDialog
         open={confirming}
         onOpenChange={setConfirming}
-        title="Let everyone make videos?"
-        description="Anyone, on any device, anywhere, can start new videos within a second. The daily limits still apply."
-        confirmLabel="Yes, open to everyone"
-        busyLabel="Saving…"
+        title={t("controls.confirmEveryoneTitle")}
+        description={t("controls.confirmEveryoneDescription")}
+        confirmLabel={t("controls.confirmEveryone")}
+        busyLabel={t("common.saving")}
         onConfirm={() => change({ videoAudience: "everyone" })}
       />
     </>
@@ -210,11 +231,12 @@ function LimitedCountriesPicker({
   change: Change;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const t = useTranslations("admin");
   return (
     <>
       <ChoicePicker
-        label="Limited countries"
-        options={limitedAccessChoices(share)}
+        label={t("controls.limitedLabel")}
+        options={limitedAccessChoices(share, t)}
         value={value}
         disabled={disabled}
         onPick={(option) => {
@@ -225,10 +247,12 @@ function LimitedCountriesPicker({
       <ConfirmDialog
         open={confirming}
         onOpenChange={setConfirming}
-        title="Open videos in the limited countries?"
-        description={`Everyone in ${LIMITED_COUNTRY_NAMES} can start new videos under the usual rules within a second. The daily limits still apply.`}
-        confirmLabel="Yes, open them"
-        busyLabel="Saving…"
+        title={t("controls.confirmLimitedTitle")}
+        description={t("controls.confirmLimitedDescription", {
+          countries: LIMITED_COUNTRY_NAMES,
+        })}
+        confirmLabel={t("controls.confirmLimited")}
+        busyLabel={t("common.saving")}
         onConfirm={() => change({ limitedCountryAccess: "open" })}
       />
     </>
@@ -237,11 +261,27 @@ function LimitedCountriesPicker({
 
 // Countries to preview video pages from (see server/admin/view-as.ts): one
 // outside the priority places, and one of the limited countries.
-const VIEW_AS: Array<Choice<string>> = [
-  { value: "", label: "Off", hint: "Your own place, with admin powers" },
-  { value: "DE", label: "Germany", hint: "Outside the priority places" },
-  { value: "IN", label: "India", hint: "A limited country" },
-  { value: "BR", label: "Brazil", hint: "A limited country" },
+const VIEW_AS = (t: ControlsTranslator): Array<Choice<string>> => [
+  {
+    value: "",
+    label: t("controls.viewAsOff"),
+    hint: t("controls.viewAsOffHint"),
+  },
+  {
+    value: "DE",
+    label: t("controls.viewAsGermany"),
+    hint: t("controls.viewAsGermanyHint"),
+  },
+  {
+    value: "IN",
+    label: t("controls.viewAsIndia"),
+    hint: t("controls.viewAsIndiaHint"),
+  },
+  {
+    value: "BR",
+    label: t("controls.viewAsBrazil"),
+    hint: t("controls.viewAsBrazilHint"),
+  },
 ];
 
 /**
@@ -251,6 +291,7 @@ const VIEW_AS: Array<Choice<string>> = [
 function ViewAsPicker() {
   const [country, setCountry] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const t = useTranslations("admin.controls");
   useEffect(() => {
     const controller = new AbortController();
     fetch("/api/admin/view-as", {
@@ -270,27 +311,24 @@ function ViewAsPicker() {
       body: JSON.stringify({ country: next || null }),
     })
       .then(async (response) => {
-        if (!response.ok) throw new Error("Could not change it.");
+        if (!response.ok) throw new Error(t("viewAsFailed"));
         setCountry(next);
       })
       .catch((failure: unknown) =>
         setError(
-          failure instanceof Error ? failure.message : "Could not change it.",
+          failure instanceof Error ? failure.message : t("viewAsFailed"),
         ),
       );
   };
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-sm font-semibold">
-        See video pages as a visitor from
-      </div>
+      <div className="text-sm font-semibold">{t("viewAsLabel")}</div>
       <p className="text-xs text-[hsl(var(--neo-soft-text))]">
-        In this browser only, for 12 hours: that country&apos;s rules, limits
-        and $3 offer, with no admin powers on video pages. No VPN needed.
+        {t("viewAsNote")}
       </p>
       <ChoicePicker
-        label="See video pages as a visitor from"
-        options={VIEW_AS}
+        label={t("viewAsLabel")}
+        options={VIEW_AS(t)}
         value={country ?? ""}
         disabled={country === null}
         onPick={pick}
@@ -319,6 +357,7 @@ function LimitField({
 }) {
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const t = useTranslations("admin");
   const parsed = Number.parseInt(draft, 10);
   const tooHigh = Number.isSafeInteger(parsed) && parsed > max;
   const valid =
@@ -345,14 +384,14 @@ function LimitField({
         <button
           type="button"
           disabled={!valid || disabled}
-          aria-label={`Set ${label.toLowerCase()}`}
+          aria-label={t("controls.setAria", { label: label.toLowerCase() })}
           onClick={() => {
             void save(parsed);
             setDraft("");
           }}
           className={`neo-button h-10 rounded-md px-3 text-sm font-semibold disabled:opacity-50 ${TOUCH}`}
         >
-          Set
+          {t("controls.set")}
         </button>
         {override !== null ? (
           <ResetLimit
@@ -365,13 +404,15 @@ function LimitField({
       </div>
       {tooHigh || error ? (
         <div role="alert" className="text-xs text-red-700 dark:text-red-400">
-          {tooHigh ? `At most ${max.toLocaleString("en-US")}` : error}
+          {tooHigh
+            ? t("controls.atMost", { max: max.toLocaleString("en-US") })
+            : error}
         </div>
       ) : (
         <div className="text-xs text-[hsl(var(--neo-soft-text))]">
           {override !== null
-            ? "Set here, overriding the default"
-            : "Default from the deployment"}
+            ? t("controls.setHere")
+            : t("controls.defaultFrom")}
         </div>
       )}
     </div>
@@ -390,24 +431,25 @@ function ResetLimit({
   onReset: () => Promise<string | null>;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("admin");
   return (
     <>
       <button
         type="button"
         disabled={disabled}
-        aria-label={`Reset ${label.toLowerCase()} to the default`}
+        aria-label={t("controls.resetAria", { label: label.toLowerCase() })}
         onClick={() => setOpen(true)}
         className={`neo-button-muted h-10 rounded-md px-3 text-sm font-semibold disabled:opacity-50 ${TOUCH}`}
       >
-        Reset
+        {t("controls.reset")}
       </button>
       <ConfirmDialog
         open={open}
         onOpenChange={setOpen}
-        title="Go back to the default?"
-        description={`${label} goes from ${override} back to the deployment's default, which may be higher, within a second.`}
-        confirmLabel="Yes, use the default"
-        busyLabel="Saving…"
+        title={t("controls.resetTitle")}
+        description={t("controls.resetDescription", { label, override })}
+        confirmLabel={t("controls.confirmReset")}
+        busyLabel={t("common.saving")}
         onConfirm={onReset}
       />
     </>
@@ -428,24 +470,27 @@ export function ControlsPanel({
   const adminTools = useAdminTools();
   const controls = state?.controls;
   const video = state?.video;
+  const t = useTranslations("admin");
   return (
     <Panel
-      title="Video making"
+      title={t("controls.title")}
       className="lg:col-span-3"
       aside={
         saving ? (
-          "Saving…"
+          t("common.saving")
         ) : saveError ? (
           <span className="text-red-700 dark:text-red-400">{saveError}</span>
         ) : (
-          "Changes are live in about a second"
+          t("controls.liveNote")
         )
       }
     >
       {controls ? (
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
-            <div className="text-sm font-semibold">Who can make new videos</div>
+            <div className="text-sm font-semibold">
+              {t("controls.audienceLabel")}
+            </div>
             <AudiencePicker
               value={controls.videoAudience}
               disabled={saving}
@@ -453,24 +498,28 @@ export function ControlsPanel({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <div className="text-sm font-semibold">Priority places</div>
+            <div className="text-sm font-semibold">
+              {t("controls.placesLabel")}
+            </div>
             <p className="text-xs text-[hsl(var(--neo-soft-text))]">
-              People here get more videos a day. Every video is written by
-              Claude Opus and designed by Claude Haiku 5.5.
+              {t("controls.placesNote")}
             </p>
             <ChoicePicker
-              label="Priority places"
-              options={PLACES}
+              label={t("controls.placesLabel")}
+              options={PLACES(t)}
               value={controls.priorityPlaces}
               disabled={saving}
               onPick={(option) => void change({ priorityPlaces: option })}
             />
           </div>
           <div className="flex flex-col gap-2">
-            <div className="text-sm font-semibold">Limited countries</div>
+            <div className="text-sm font-semibold">
+              {t("controls.limitedLabel")}
+            </div>
             <p className="text-xs text-[hsl(var(--neo-soft-text))]">
-              {LIMITED_COUNTRY_NAMES}. Applies whoever can make videos above.
-              Watching and downloading stay open.
+              {t("controls.limitedNote", {
+                countries: LIMITED_COUNTRY_NAMES,
+              })}
             </p>
             <LimitedCountriesPicker
               value={controls.limitedCountryAccess}
@@ -481,7 +530,7 @@ export function ControlsPanel({
               change={change}
             />
             <LimitField
-              label="Share let in each day (%)"
+              label={t("controls.shareDaily")}
               override={controls.limitedCountryShare}
               effective={DEFAULT_LIMITED_COUNTRY_SHARE}
               max={100}
@@ -492,11 +541,10 @@ export function ControlsPanel({
           <label className="flex items-center justify-between gap-4 rounded-md border-2 border-black bg-white/70 p-3 dark:bg-black/20">
             <span>
               <span className="block font-semibold">
-                Pause all new free videos
+                {t("controls.pauseTitle")}
               </span>
               <span className="block text-xs text-[hsl(var(--neo-soft-text))]">
-                Watching and downloading keep working. You can still make
-                videos, and people can still buy one unless selling is off.
+                {t("controls.pauseDescription")}
               </span>
             </span>
             <Switch
@@ -505,15 +553,16 @@ export function ControlsPanel({
               onCheckedChange={(checked) =>
                 void change({ videosPaused: checked })
               }
-              aria-label="Pause all new videos"
+              aria-label={t("controls.pauseAria")}
             />
           </label>
           <label className="flex items-center justify-between gap-4 rounded-md border-2 border-black bg-white/70 p-3 dark:bg-black/20">
             <span>
-              <span className="block font-semibold">Sell videos</span>
+              <span className="block font-semibold">
+                {t("controls.sellTitle")}
+              </span>
               <span className="block text-xs text-[hsl(var(--neo-soft-text))]">
-                Anyone the settings above hold back, paused included, can pay to
-                have a video made. A failed one is refunded.
+                {t("controls.sellDescription")}
               </span>
             </span>
             <Switch
@@ -522,29 +571,28 @@ export function ControlsPanel({
               onCheckedChange={(checked) =>
                 void change({ paidVideos: checked })
               }
-              aria-label="Sell videos"
+              aria-label={t("controls.sellAria")}
             />
           </label>
           <label className="flex items-center justify-between gap-4 rounded-md border-2 border-black bg-white/70 p-3 dark:bg-black/20">
             <span>
               <span className="block font-semibold">
-                Show admin controls on video pages
+                {t("controls.adminControlsTitle")}
               </span>
               <span className="block text-xs text-[hsl(var(--neo-soft-text))]">
-                Adds a Regenerate video button, in this browser only. Turn it
-                off to see pages the way visitors do.
+                {t("controls.adminControlsDescription")}
               </span>
             </span>
             <Switch
               checked={adminTools}
               onCheckedChange={setAdminTools}
-              aria-label="Show admin controls on video pages"
+              aria-label={t("controls.adminControlsAria")}
             />
           </label>
           <ViewAsPicker />
           <div className="grid gap-4 sm:grid-cols-2">
             <LimitField
-              label="New videos per day"
+              label={t("controls.limitDaily")}
               override={controls.videoDailyLimit}
               effective={video?.videos.limit}
               max={MAX_DAILY}
@@ -552,7 +600,7 @@ export function ControlsPanel({
               onSave={(value) => change({ videoDailyLimit: value })}
             />
             <LimitField
-              label="Per person per day"
+              label={t("controls.limitPerson")}
               override={controls.videoPersonDailyLimit}
               effective={video?.videos.personLimit}
               max={MAX_PER_PERSON}
@@ -560,7 +608,7 @@ export function ControlsPanel({
               onSave={(value) => change({ videoPersonDailyLimit: value })}
             />
             <LimitField
-              label="Per priority person per day"
+              label={t("controls.limitPriority")}
               override={controls.videoPriorityPersonDailyLimit}
               effective={video?.videos.priorityPersonLimit}
               max={MAX_PER_PERSON}
@@ -570,7 +618,7 @@ export function ControlsPanel({
               }
             />
             <LimitField
-              label="Per connection per day (backstop)"
+              label={t("controls.limitConnection")}
               override={controls.videoNetworkDailyLimit}
               effective={video?.videos.networkLimit}
               max={MAX_PER_PERSON}
@@ -580,7 +628,9 @@ export function ControlsPanel({
           </div>
         </div>
       ) : (
-        <p className="text-sm text-[hsl(var(--neo-soft-text))]">Loading…</p>
+        <p className="text-sm text-[hsl(var(--neo-soft-text))]">
+          {t("loading")}
+        </p>
       )}
     </Panel>
   );

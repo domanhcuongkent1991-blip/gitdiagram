@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { modelLabel } from "~/features/explainer/model-label";
 import { useVideoRun } from "~/features/explainer/runs";
 import { useStoredVideoModel } from "~/features/explainer/stored-video";
@@ -14,6 +15,7 @@ export function VideoInfo({
   repo: string;
 }) {
   const run = useVideoRun(username, repo);
+  const t = useTranslations("explainer");
   // Shared with the Video panel's lookups, and updated when a run finishes.
   const stored = useStoredVideoModel(username, repo);
   const making = run?.kind === "generating" ? run.progress.model : undefined;
@@ -23,7 +25,9 @@ export function VideoInfo({
   return (
     <div className={styles.resultMetadata}>
       <span>
-        Video {making ? "being made" : "made"} with {modelLabel(model)}
+        {making
+          ? t("info.making", { model: modelLabel(model) })
+          : t("info.made", { model: modelLabel(model) })}
       </span>
     </div>
   );

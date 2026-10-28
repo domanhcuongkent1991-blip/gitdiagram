@@ -5,6 +5,7 @@ import { useState, type CSSProperties } from "react";
 import { preload } from "react-dom";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowUpRight, Expand } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { SponsorSurface } from "./sponsor-content";
 import styles from "./sponsor-placement-preview.module.css";
 
@@ -12,6 +13,7 @@ export function SponsorPlacementPreview({
   name,
   preview,
 }: Pick<SponsorSurface, "name" | "preview">) {
+  const t = useTranslations("advertise");
   const [instant, setInstant] = useState(false);
   const [imageReady, setImageReady] = useState(false);
 
@@ -25,13 +27,13 @@ export function SponsorPlacementPreview({
         <button
           type="button"
           className={styles.trigger}
-          aria-label={`View placement: ${name}`}
+          aria-label={t("viewPlacementAria", { name })}
           onClick={(event) => setInstant(event.detail === 0)}
           onPointerEnter={preloadImage}
           onFocus={preloadImage}
         >
           <Expand aria-hidden="true" />
-          View placement
+          {t("viewPlacement")}
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
@@ -57,16 +59,16 @@ export function SponsorPlacementPreview({
               target="_blank"
               rel="noopener noreferrer"
             >
-              Open full size
+              {t("openFullSize")}
               <ArrowUpRight aria-hidden="true" />
             </a>
           </div>
           <Dialog.Description className="sr-only">
-            {preview.caption} Click outside the image or press Escape to close.
+            {preview.caption} {t("closeHint")}
           </Dialog.Description>
           {!imageReady && (
             <span className={styles.loading} role="status">
-              Loading preview…
+              {t("loadingPreview")}
             </span>
           )}
           <div
@@ -101,7 +103,7 @@ export function SponsorPlacementPreview({
             className={styles.accessibleClose}
             onClick={() => setInstant(true)}
           >
-            Close preview
+            {t("closePreview")}
           </Dialog.Close>
         </Dialog.Content>
       </Dialog.Portal>

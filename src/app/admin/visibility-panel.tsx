@@ -13,6 +13,7 @@ import {
   percent,
   type VisibilityReport,
 } from "~/features/admin/visibility";
+import { useTranslations } from "next-intl";
 import { BarList, number, Panel, Tile, TOUCH } from "./ui";
 
 // How visible GitDiagram is to AI assistants and crawlers. Read once when the
@@ -21,11 +22,11 @@ import { BarList, number, Panel, Tile, TOUCH } from "./ui";
 
 const SOFT = "text-[hsl(var(--neo-soft-text))]";
 
-const MARKS: Record<string, { symbol: string; label: string }> = {
-  "2": { symbol: "●", label: "named and linked" },
-  "1": { symbol: "◐", label: "named" },
-  "0": { symbol: "·", label: "not named" },
-  "-": { symbol: "–", label: "failed" },
+const MARKS: Record<string, { symbol: string; labelKey: string }> = {
+  "2": { symbol: "●", labelKey: "markNamedLinked" },
+  "1": { symbol: "◐", labelKey: "markNamed" },
+  "0": { symbol: "·", labelKey: "markUnnamed" },
+  "-": { symbol: "–", labelKey: "markFailed" },
 };
 
 function rate(summary: AiVisibilitySummary | undefined, variant: AiVariant) {
@@ -45,8 +46,9 @@ function Trend({
     .slice()
     .reverse()
     .map((summary) => rate(summary, variant) ?? 0);
+  const t = useTranslations("admin.visibility");
   if (points.length < 2)
-    return <span className={`text-xs ${SOFT}`}>A line after two runs</span>;
+    return <span className={`text-xs ${SOFT}`}>{t("lineAfterTwo")}</span>;
   const width = 120;
   const height = 24;
   const x = (index: number) => (index / (points.length - 1)) * width;
@@ -57,7 +59,10 @@ function Trend({
       preserveAspectRatio="none"
       className="h-6 w-28"
       role="img"
-      aria-label={`${AI_VARIANT_LABELS[variant]} over ${points.length} runs`}
+      aria-label={t("runsAria", {
+        variant: AI_VARIANT_LABELS[variant],
+        count: points.length,
+      })}
     >
       <path
         d={points
@@ -74,6 +79,7 @@ function Trend({
 
 function VariantTiles({ summaries }: { summaries: AiVisibilitySummary[] }) {
   const [today, previous] = summaries;
+  const t = useTranslations("admin.visibility");
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {AI_VARIANTS.map((variant) => {
@@ -88,17 +94,24 @@ function VariantTiles({ summaries }: { summaries: AiVisibilitySummary[] }) {
             sub={
               stats ? (
                 <>
-                  Named in {stats.mentioned} of {stats.answered} · linked{" "}
-                  {stats.cited}
+                  {t("namedIn", {
+                    mentioned: stats.mentioned,
+                    answered: stats.answered,
+                    cited: stats.cited,
+                  })}
                   {stats.mentioned
-                    ? ` · avg place #${(stats.positionSum / stats.mentioned).toFixed(1)}`
+                    ? t("avgPlace", {
+                        position: (stats.positionSum / stats.mentioned).toFixed(
+                          1,
+                        ),
+                      })
                     : ""}
                   {before !== null
-                    ? ` · before ${Math.round(before * 100)}%`
+                    ? t("before", { percent: Math.round(before * 100) })
                     : ""}
                 </>
               ) : (
-                "No run yet"
+                t("noRunYet")
               )
             }
           />
@@ -110,15 +123,16 @@ function VariantTiles({ summaries }: { summaries: AiVisibilitySummary[] }) {
 
 function TrendTable({ summaries }: { summaries: AiVisibilitySummary[] }) {
   const week = summaries.slice(0, 7);
+  const t = useTranslations("admin.visibility");
   return (
     <table className="w-full text-sm">
       <thead>
         <tr className={`text-left text-xs ${SOFT}`}>
-          <th className="py-1 font-semibold">Assistant</th>
+          <th className="py-1 font-semibold">{t("assistant")}</th>
           <th className="py-1 font-semibold">
-            {summaries.length} {summaries.length === 1 ? "run" : "runs"}
+            {t("runs", { count: summaries.length })}
           </th>
-          <th className="py-1 text-right font-semibold">7-day</th>
+          <th className="py-1 text-right font-semibold">{t("week")}</th>
         </tr>
       </thead>
       <tbody>
@@ -149,6 +163,7 @@ function TrendTable({ summaries }: { summaries: AiVisibilitySummary[] }) {
 }
 
 function AnswerText({ answer }: { answer: AiAnswer }) {
+  const t = useTranslations("admin.visibility");
   return (
     <div className="rounded-md border-2 border-black bg-white/70 p-3 dark:bg-black/20">
       <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2 text-xs font-semibold">
@@ -156,7 +171,7 @@ function AnswerText({ answer }: { answer: AiAnswer }) {
         <span className={`${SOFT} tabular-nums`}>
           {answer.error
             ? answer.error
-            : `${answer.mentioned ? `GitDiagram #${answer.position ?? "?"}` : "No GitDiagram"}${answer.inSources ? " · in sources" : ""} · $${answer.costUsd.toFixed(3)}`}
+            : `${answer.mentioned ? t("position", { position: answer.position ?? "?" }) : t("noGitDiagram")}${answer.inSources ? t("inSources") : ""} · $${answer.costUsd.toFixed(3)}`}
         </span>
       </div>
       {answer.text ? (
@@ -166,7 +181,7 @@ function AnswerText({ answer }: { answer: AiAnswer }) {
       ) : null}
       {answer.citations.length ? (
         <p className={`mt-2 text-xs [overflow-wrap:anywhere] ${SOFT}`}>
-          Cites: {answer.citations.join(" · ")}
+          {t("cites", { list: answer.citations.join(" · ") })}
         </p>
       ) : null}
     </div>
@@ -181,6 +196,7 @@ function Questions({
   summary: AiVisibilitySummary;
   answers: AiAnswer[];
 }) {
+  const t = useTranslations("admin.visibility");
   return (
     <ul className="flex flex-col divide-y-2 divide-black/10 dark:divide-white/10">
       {summary.prompts.map((id, index) => {
@@ -195,7 +211,7 @@ function Questions({
                     return (
                       <span
                         key={variant}
-                        title={`${AI_VARIANT_LABELS[variant]}: ${mark.label}`}
+                        title={`${AI_VARIANT_LABELS[variant]}: ${t(mark.labelKey)}`}
                         className="w-3 text-center"
                       >
                         {mark.symbol}
@@ -234,8 +250,9 @@ function agentRows(days: AgentFetchDay[]) {
 }
 
 function Crawlers({ days }: { days: AgentFetchDay[] | null }) {
+  const t = useTranslations("admin.visibility");
   if (!days)
-    return <p className={`text-sm ${SOFT}`}>Could not read the counts.</p>;
+    return <p className={`text-sm ${SOFT}`}>{t("countsUnreadable")}</p>;
   const { ai, other } = agentRows(days);
   const today = Object.values(days[0]?.families ?? {}).reduce(
     (sum, count) => sum + count,
@@ -244,26 +261,24 @@ function Crawlers({ days }: { days: AgentFetchDay[] | null }) {
   return (
     <div className="flex flex-col gap-3">
       <p className={`text-xs ${SOFT}`}>
-        {number.format(today)} today. Counted in the proxy for search and AI
-        crawlers on every page (cached repo pages too), plus video files and the
-        IndexNow key. Social link previews are counted only on video files.
+        {t("todayCount", { count: number.format(today) })}
       </p>
       <div>
-        <h3 className="mb-1.5 text-xs font-bold uppercase">AI agents</h3>
+        <h3 className="mb-1.5 text-xs font-bold uppercase">{t("aiAgents")}</h3>
         {ai.length ? (
           <BarList rows={ai} />
         ) : (
-          <p className={`text-sm ${SOFT}`}>None counted yet.</p>
+          <p className={`text-sm ${SOFT}`}>{t("noneYet")}</p>
         )}
       </div>
       <div>
         <h3 className="mb-1.5 text-xs font-bold uppercase">
-          Search engines and previews
+          {t("searchEngines")}
         </h3>
         {other.length ? (
           <BarList rows={other} />
         ) : (
-          <p className={`text-sm ${SOFT}`}>None counted yet.</p>
+          <p className={`text-sm ${SOFT}`}>{t("noneYet")}</p>
         )}
       </div>
     </div>
@@ -274,6 +289,7 @@ export function VisibilityPanel() {
   const [report, setReport] = useState<VisibilityReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const t = useTranslations("admin.visibility");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -284,17 +300,15 @@ export function VisibilityPanel() {
       const body = (await response.json().catch(() => null)) as
         (VisibilityReport & { error?: string }) | null;
       if (!response.ok || !body || !Array.isArray(body.summaries))
-        throw new Error(body?.error ?? "Could not load. Try again.");
+        throw new Error(body?.error ?? t("loadFailed"));
       setReport(body);
       setError(null);
     } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : "Could not load. Try again.",
-      );
+      setError(caught instanceof Error ? caught.message : t("loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -303,19 +317,24 @@ export function VisibilityPanel() {
   const latest = report?.summaries[0];
   return (
     <Panel
-      title="Search & AI"
+      title={t("title")}
       aside={
         <span className="flex items-center gap-2">
           {latest
-            ? `Asked ${latest.date} · ${latest.models.openai}, ${latest.models.anthropic} · $${latest.costUsd.toFixed(2)}`
-            : "Asked daily at 13:00 UTC"}
+            ? t("asked", {
+                date: latest.date,
+                openai: latest.models.openai,
+                anthropic: latest.models.anthropic,
+                cost: latest.costUsd.toFixed(2),
+              })
+            : t("askedDaily")}
           <button
             type="button"
             disabled={loading}
             onClick={() => void load()}
             className={`neo-button-muted h-7 rounded-md px-2 text-xs font-semibold ${TOUCH}`}
           >
-            Refresh
+            {t("refresh")}
           </button>
         </span>
       }
@@ -327,20 +346,17 @@ export function VisibilityPanel() {
       ) : null}
       <div className="flex flex-col gap-5">
         <div>
-          <p className={`mb-2 text-xs ${SOFT}`}>
-            How often assistants name GitDiagram when asked 12 everyday
-            questions: with web search, and from memory (training data).
-          </p>
+          <p className={`mb-2 text-xs ${SOFT}`}>{t("intro")}</p>
           <VariantTiles summaries={report?.summaries ?? []} />
         </div>
         <div className="grid gap-5 lg:grid-cols-2">
           <div>
-            <h3 className="mb-1.5 text-xs font-bold uppercase">Trend</h3>
+            <h3 className="mb-1.5 text-xs font-bold uppercase">{t("trend")}</h3>
             <TrendTable summaries={report?.summaries ?? []} />
           </div>
           <div>
             <h3 className="mb-1.5 text-xs font-bold uppercase">
-              Other tools named
+              {t("otherTools")}
             </h3>
             <BarList rows={latest?.competitors.slice(0, 10) ?? []} />
           </div>
@@ -348,14 +364,14 @@ export function VisibilityPanel() {
         {latest && report?.latest?.date === latest.date ? (
           <div>
             <h3 className="mb-1.5 text-xs font-bold uppercase">
-              Questions · ● linked ◐ named · not named
+              {t("questions")}
             </h3>
             <Questions summary={latest} answers={report.latest.answers} />
           </div>
         ) : null}
         <div>
           <h3 className="mb-1.5 text-xs font-bold uppercase">
-            Crawlers and AI agents · 14 days
+            {t("crawlersHeading")}
           </h3>
           <Crawlers days={report ? report.agents : []} />
         </div>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { CircleAlert, Clapperboard, RotateCcw } from "lucide-react";
 import {
   formatPrice,
@@ -18,7 +19,6 @@ import {
   useVideoRun,
   type VideoRun,
 } from "~/features/explainer/runs";
-import type { VideoGenerationStage } from "~/features/explainer/types";
 import { useAdminTools } from "~/features/admin/tools";
 import { modelLabel, modelLabels } from "~/features/explainer/model-label";
 import { ActivityMark } from "~/components/generation/activity-mark";
@@ -29,32 +29,9 @@ import { GenerationRows, ScriptPreview } from "./explainer-progress";
 import { ExplainerShare } from "./explainer-share";
 import styles from "./explainer-video.module.css";
 
-const STAGE_TITLES: Record<VideoGenerationStage, string> = {
-  reading: "Reading the code",
-  planning: "Writing the script",
-  designing: "Designing the scenes and recording the voice",
-  saving: "Saving the video",
-};
-
 function isTouchMac() {
   return navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent);
 }
-
-const PAUSED: Record<VideoPausedReason, string> = {
-  audience:
-    "Making new videos is in early access in a few places for now. Every video already made is free to watch.",
-  device:
-    "Making new videos needs a computer here for now. Every video already made is free to watch.",
-  limit:
-    "Today's free videos have all been made. Check back tomorrow; every video already made is free to watch.",
-};
-
-/** The same, when this visitor can buy the video instead. */
-const PAYABLE: Record<VideoPausedReason, string> = {
-  audience: "Free videos are in early access in a few places for now.",
-  device: "Free videos need a computer here for now.",
-  limit: "Today's free videos are used up.",
-};
 
 // The checkout session Stripe sends a payer back with (see payments.ts).
 const PAID_SESSION = /^cs_(?:live|test)_[A-Za-z0-9]{10,200}$/;
@@ -159,33 +136,29 @@ function Elapsed({ startedAt }: { startedAt: number }) {
 
 /** Who is making the film, and roughly how long it takes. */
 function MakingLine({ model, repo }: { model?: string; repo: string }) {
+  const t = useTranslations("explainer");
   const [director, designer] = model ? modelLabels(model) : [];
   if (director && designer)
-    return (
-      <>
-        {director} writes the script for {repo}, and {designer} designs every
-        scene while the narration is recorded. Usually about a minute.
-      </>
-    );
+    return <>{t("making.both", { director, designer, repo })}</>;
   return (
     <>
-      {director ?? "GitDiagram"} reads {repo}, writes a script and designs every
-      scene while the narration is recorded.{" "}
+      {t("making.solo", { lead: director ?? "GitDiagram", repo })}{" "}
       {model?.startsWith("gpt-")
-        ? "Usually a minute or two."
-        : "Usually under a minute."}
+        ? t("making.minuteOrTwo")
+        : t("making.underMinute")}
     </>
   );
 }
 
 /** A player-shaped placeholder while the stored video is looked up. */
 function PlayerSkeleton() {
+  const t = useTranslations("videosPage");
   return (
     <div className={styles.panel} aria-busy="true">
       <div className={`${styles.player} ${styles.skeleton}`}>
         <div className={styles.skeletonLabel}>
           <ActivityMark />
-          <span className={styles.shimmer}>Loading video</span>
+          <span className={styles.shimmer}>{t("loadingVideo")}</span>
         </div>
       </div>
     </div>
@@ -201,6 +174,7 @@ export function ExplainerVideo({
 }) {
   const [lookedUpState, setState] = useState<PanelState>({ kind: "loading" });
   const [lookup, setLookup] = useState(0);
+  const t = useTranslations("explainer");
   // A run this tab started outlives the panel (see runs.ts) and wins over
   // whatever the lookup found.
   const run = useVideoRun(username, repo);
@@ -232,16 +206,14 @@ export function ExplainerVideo({
         setState({
           kind: "lookupError",
           message:
-            error instanceof Error
-              ? error.message
-              : "Could not load the video.",
+            error instanceof Error ? error.message : t("loadVideoFailed"),
         });
       });
     return () => {
       controller.abort();
       releaseVideoRun(username, repo);
     };
-  }, [username, repo, lookup, paid]);
+  }, [username, repo, lookup, paid, t]);
 
   // Once the paid video is here, the address is the plain watch page again,
   // fit to share.
@@ -327,9 +299,7 @@ export function ExplainerVideo({
         setCheckout({
           opening: false,
           error:
-            error instanceof Error
-              ? error.message
-              : "Could not open the checkout.",
+            error instanceof Error ? error.message : t("openCheckoutFailed"),
         }),
       );
   };
@@ -356,26 +326,28 @@ export function ExplainerVideo({
             {Math.round(video.timing.DURATION)}s
           </span>
           <span>
-            Made with {modelLabel(video.stats.model)} in{" "}
-            {(video.stats.totalMs / 1000).toFixed(0)}s
+            {t("madeWith", {
+              model: modelLabel(video.stats.model),
+              seconds: (video.stats.totalMs / 1000).toFixed(0),
+            })}
           </span>
           {canRegenerate &&
             (confirming ? (
               <span className={styles.metaConfirm}>
-                Replace this video for everyone?
+                {t("replaceConfirm")}
                 <button
                   type="button"
                   className={styles.metaButton}
                   onClick={generate}
                 >
-                  Regenerate
+                  {t("regenerate")}
                 </button>
                 <button
                   type="button"
                   className={styles.metaButton}
                   onClick={() => setConfirming(false)}
                 >
-                  Cancel
+                  {t("feedback.cancel")}
                 </button>
               </span>
             ) : (
@@ -384,7 +356,7 @@ export function ExplainerVideo({
                 className={styles.metaButton}
                 onClick={() => setConfirming(true)}
               >
-                Regenerate video
+                {t("regenerateVideo")}
               </button>
             ))}
         </div>
@@ -403,7 +375,7 @@ export function ExplainerVideo({
             aria-live="polite"
             aria-atomic="true"
           >
-            {STAGE_TITLES[state.stage]}
+            {t(`stage.${state.stage}`)}
           </h2>
           <Elapsed startedAt={state.startedAt} />
         </div>
@@ -425,7 +397,7 @@ export function ExplainerVideo({
         <div className={controls.statusLine}>
           <ActivityMark />
           <h2 className={`${controls.statusTitle} ${styles.shimmer}`}>
-            This video is being made right now
+            {t("beingMade")}
           </h2>
         </div>
         <p className={controls.description}>
@@ -451,7 +423,7 @@ export function ExplainerVideo({
             onClick={retryLookup}
           >
             <RotateCcw size={15} aria-hidden="true" />
-            Try again
+            {t("tryAgain")}
           </button>
         </div>
       </div>
@@ -474,18 +446,16 @@ export function ExplainerVideo({
             <h2 className={controls.statusTitle}>{state.message}</h2>
           </div>
         ) : (
-          <h2 className={controls.statusTitle}>
-            There&apos;s no video of {repo} yet
-          </h2>
+          <h2 className={controls.statusTitle}>{t("noVideoYet", { repo })}</h2>
         )}
       </div>
       {!failed && (
         <p className={controls.description}>
           {paused
             ? price !== null
-              ? `${PAYABLE[state.paused ?? "limit"]} You can still have this one made for ${formatPrice(price)}, and it will be free for everyone to watch.`
-              : PAUSED[state.paused ?? "limit"]
-            : "A narrated 90-second tour: what the project does, how its parts fit together, and a few of the decisions inside."}
+              ? `${t(`payable.${state.paused ?? "limit"}`)} ${t("payableSuffix", { price: formatPrice(price) })}`
+              : t(`paused.${state.paused ?? "limit"}`)
+            : t("tourIntro")}
         </p>
       )}
       <div className={styles.cta}>
@@ -498,8 +468,8 @@ export function ExplainerVideo({
           >
             <Clapperboard size={15} aria-hidden="true" />
             {checkout.opening
-              ? "Opening checkout…"
-              : `Make it for ${formatPrice(price)}`}
+              ? t("openingCheckout")
+              : t("makeItFor", { price: formatPrice(price) })}
           </button>
         )}
         {paused ? (
@@ -508,7 +478,7 @@ export function ExplainerVideo({
             className={`${controls.actionButton} ${price === null ? controls.primary : ""}`}
           >
             {price === null && <Clapperboard size={15} aria-hidden="true" />}
-            Watch the videos
+            {t("watchTheVideos")}
           </Link>
         ) : (
           state.canGenerate && (
@@ -518,7 +488,7 @@ export function ExplainerVideo({
               onClick={generate}
             >
               <Clapperboard size={15} aria-hidden="true" />
-              {failed ? "Try again" : "Make the video"}
+              {failed ? t("tryAgain") : t("makeVideo")}
             </button>
           )
         )}
@@ -531,7 +501,7 @@ export function ExplainerVideo({
               setState({ kind: "ready", video: state.previous! });
             }}
           >
-            Keep the current video
+            {t("keepCurrent")}
           </button>
         )}
       </div>
@@ -542,12 +512,14 @@ export function ExplainerVideo({
       )}
       {state.kind === "empty" && state.viewingAs && (
         <p className={controls.description}>
-          You&apos;re seeing this as a visitor from{" "}
-          {countryName(state.viewingAs)}.{" "}
-          <Link href="/admin" className="underline">
-            Turn it off in /admin
-          </Link>
-          .
+          {t.rich("viewingAs", {
+            country: countryName(state.viewingAs),
+            link: (chunks) => (
+              <Link href="/admin" className="underline">
+                {chunks}
+              </Link>
+            ),
+          })}
         </p>
       )}
     </div>

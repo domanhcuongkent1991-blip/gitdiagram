@@ -1,11 +1,11 @@
 "use client";
 
 import { ExternalLink } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { GitHubIcon } from "~/components/icons/github-icon";
 import {
   GITHUB_CONNECT_ENABLED,
-  GITHUB_CONNECT_FAILURES,
   githubConnectUrl,
   type GitHubConnectFailure,
   type GitHubConnectSource,
@@ -44,6 +44,7 @@ function GitHubConnect({
   returnTo?: string;
   connectError?: GitHubConnectFailure;
 }) {
+  const t = useTranslations("dialogs.privateRepos");
   const needsInstall = connectError === "no_access" && Boolean(repository);
   const start = (mode: "authorize" | "install") => {
     captureAnalyticsEvent("github_connect_started", { source, mode });
@@ -58,18 +59,17 @@ function GitHubConnect({
         className={`${controls.actionButton} ${controls.primary} w-full`}
       >
         <GitHubIcon className="h-4 w-4" aria-hidden="true" />
-        Continue with GitHub
+        {t("continueGithub")}
       </a>
       <p className="text-xs text-neutral-700 dark:text-neutral-300">
-        Read-only, and only for the repositories you pick on GitHub. No token to
-        copy.
+        {t("readOnlyNote")}
       </p>
       {connectError && (
         <p
           role="alert"
           className="text-sm font-medium text-red-700 dark:text-red-300"
         >
-          {GITHUB_CONNECT_FAILURES[connectError]}
+          {t(`failures.${connectError}`)}
         </p>
       )}
       {needsInstall && (
@@ -83,21 +83,27 @@ function GitHubConnect({
           onClick={() => start("install")}
           className={`${controls.actionButton} w-full`}
         >
-          Choose repositories on GitHub
+          {t("chooseRepos")}
           <ExternalLink className="h-4 w-4" aria-hidden="true" />
         </a>
       )}
       {status?.githubAppConnected && (
         <p className="text-xs text-neutral-700 dark:text-neutral-300">
-          Connected as{" "}
-          <strong className="break-all">@{status.githubLogin}</strong>.{" "}
+          {t.rich("connectedAs", {
+            login: `@${status.githubLogin}`,
+            strong: (chunks) => (
+              <strong className="break-all">{chunks}</strong>
+            ),
+          })}{" "}
           <button
             type="button"
             onClick={() => void disconnectGitHub()}
             disabled={isPending}
             className="neo-link underline disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {pendingAction === "disconnect" ? "Disconnecting..." : "Disconnect"}
+            {pendingAction === "disconnect"
+              ? t("disconnecting")
+              : t("disconnect")}
           </button>
         </p>
       )}
@@ -112,6 +118,7 @@ export function PrivateReposDialog({
   connectError,
   ...props
 }: PrivateReposDialogProps) {
+  const t = useTranslations("dialogs.privateRepos");
   const tokenUrl = new URL(
     "https://github.com/settings/personal-access-tokens/new",
   );
@@ -138,11 +145,11 @@ export function PrivateReposDialog({
     <CredentialDialog
       {...props}
       credential="github_pat"
-      title="GitHub access"
+      title={t("title")}
       description={
         GITHUB_CONNECT_ENABLED
-          ? "Connect GitHub to let GitDiagram read your private repository."
-          : "Use a token to let GitDiagram read your private repository."
+          ? t("descriptionConnect")
+          : t("descriptionToken")
       }
       primary={
         GITHUB_CONNECT_ENABLED
@@ -157,31 +164,32 @@ export function PrivateReposDialog({
             )
           : undefined
       }
-      alternativeLabel="Use a personal access token instead"
+      alternativeLabel={t("alternativeLabel")}
       setup={{
         instructions: (
           <>
-            Choose the repository owner and select{" "}
+            {t("chooseOwner")}{" "}
             {repository ? (
               <strong className="break-all">{repository}</strong>
             ) : (
-              "your repository"
+              t("yourRepository")
             )}
-            . <strong>Contents: Read-only</strong> is already selected.
+            . <strong>{t("contentsReadonly")}</strong>{" "}
+            {t("contentsSelected")}
           </>
         ),
         url: tokenUrl.toString(),
-        linkLabel: "Create token on GitHub",
+        linkLabel: t("linkLabel"),
         aiPrompt,
       }}
       dataUsage={
         <>
-          {GITHUB_CONNECT_ENABLED &&
-            "Continue with GitHub gives GitDiagram read-only access to only the repositories you pick, and you can remove it anytime in your GitHub settings. "}
-          Your {GITHUB_CONNECT_ENABLED ? "sign-in or token" : "token"} is kept
-          in a protected browser cookie for 30 days. Repository content is sent
-          to the AI provider to generate your diagram. Private diagrams are
-          stored privately on GitDiagram.
+          {GITHUB_CONNECT_ENABLED && `${t("dataUsageConnect")} `}
+          {t("dataUsageToken", {
+            kind: GITHUB_CONNECT_ENABLED
+              ? t("kindSignInOrToken")
+              : t("kindToken"),
+          })}
         </>
       }
     />

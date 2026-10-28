@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Check,
   ChevronDown,
@@ -24,6 +25,7 @@ export function GenerationActivity({
   repository?: string;
 }) {
   const step = generationStep(state.status);
+  const t = useTranslations("generation");
   const streaming = [
     "explanation_sent",
     "explanation",
@@ -44,14 +46,15 @@ export function GenerationActivity({
         {state.sourceFileCount !== undefined && (
           <div className={styles.detailRow}>
             <FileCode2 size={14} aria-hidden="true" />
-            {state.sourceFileCount} source{" "}
-            {state.sourceFileCount === 1 ? "file" : "files"} read
+            {t(state.sourceFileCount === 1 ? "fileRead" : "filesRead", {
+              count: state.sourceFileCount,
+            })}
             <Check size={13} aria-hidden="true" />
           </div>
         )}
         {step >= 2 && state.explanation && (
           <div className={styles.detailRow}>
-            <Layers2 size={14} aria-hidden="true" /> Architecture analyzed
+            <Layers2 size={14} aria-hidden="true" /> {t("architectureAnalyzed")}
             <Check size={13} aria-hidden="true" />
           </div>
         )}

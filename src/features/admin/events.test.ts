@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { describeEvent, eventTopic, movesCounters } from "./events";
+import { createTranslator } from "~/test/next-intl-mock";
+import type { EventTranslator } from "./events";
+
+import {
+  describeEvent,
+  eventTopic,
+  movesCounters,
+} from "./events";
 import { since, tally } from "./format";
+
+const t: EventTranslator = (key, values) =>
+  String(createTranslator("admin.events")(key, values));
 
 const event = (kind: string, details: Record<string, unknown> = {}) => ({
   id: 1,
@@ -20,6 +30,7 @@ describe("the live feed's words", () => {
           country: "FR",
           ownKey: true,
         }),
+        t,
       ),
     ).toMatchObject({
       title: "Diagram started",
@@ -32,25 +43,27 @@ describe("the live feed's words", () => {
           ms: 12_345,
           costUsd: 0.0123,
         }),
+        t,
       ),
     ).toMatchObject({ title: "Diagram made", detail: "12.3s · $0.012" });
     expect(
       describeEvent(
         event("render.finished", { outcome: "error", format: "vertical" }),
+        t,
       ),
     ).toMatchObject({ title: "MP4 failed", detail: "vertical" });
   });
 
   it("says why a video was held back", () => {
     expect(
-      describeEvent(event("video.gated", { reason: "person", step: "start" }))
+      describeEvent(event("video.gated", { reason: "person", step: "start" }), t)
         .detail,
     ).toBe("They already made today's video · after pressing Make the video");
   });
 
   it("reports a reset as how many had been used today", () => {
     expect(
-      describeEvent(event("limits.reset", { target: "renders", cleared: 4 }))
+      describeEvent(event("limits.reset", { target: "renders", cleared: 4 }), t)
         .detail,
     ).toBe("Today's MP4s started over. 4 were used today before the reset.");
   });
@@ -66,6 +79,7 @@ describe("the live feed's words", () => {
           region: "ON",
           city: "Toronto",
         }),
+        t,
       ),
     ).toMatchObject({
       title: "MCP call",
@@ -78,6 +92,7 @@ describe("the live feed's words", () => {
           tool: "find_repository_diagrams",
           outcome: "limited",
         }),
+        t,
       ),
     ).toMatchObject({
       tone: "text-red-700 dark:text-red-400",
@@ -86,7 +101,7 @@ describe("the live feed's words", () => {
   });
 
   it("falls back to the kind for events it does not know", () => {
-    expect(describeEvent(event("new.kind", { note: "hi" }))).toEqual({
+    expect(describeEvent(event("new.kind", { note: "hi" }), t)).toEqual({
       title: "new.kind",
       tone: "",
       detail: "hi",
@@ -109,9 +124,9 @@ describe("the live feed's words", () => {
 
   it("marks a wrong API token apart from a wrong sign-in", () => {
     expect(
-      describeEvent(event("admin.sign_in_failed", { via: "bearer" })).detail,
+      describeEvent(event("admin.sign_in_failed", { via: "bearer" }), t).detail,
     ).toBe("API token");
-    expect(describeEvent(event("admin.sign_in_failed")).detail).toBe("");
+    expect(describeEvent(event("admin.sign_in_failed"), t).detail).toBe("");
   });
 
   it("sorts events into the diagram and video filters", () => {

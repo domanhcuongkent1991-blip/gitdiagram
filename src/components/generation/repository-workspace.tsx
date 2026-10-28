@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import type { DiagramStreamState } from "~/features/diagram/types";
 import { GenerationAuditPanel } from "~/components/generation-audit-panel";
 import { SponsorSlot } from "~/components/sponsor-slot";
@@ -70,6 +71,7 @@ export function RepositoryWorkspace({
     complete,
     fail,
   } = useDiagramPresentation(state, loading, lastGenerated, onRenderError);
+  const t = useTranslations("generation");
   const [zooming, setZooming] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
@@ -118,7 +120,7 @@ export function RepositoryWorkspace({
     <section
       ref={workspace}
       className={styles.workspace}
-      aria-label="Repository diagram"
+      aria-label={t("workspace.diagramTab")}
       data-repository-workspace
       data-ready={ready}
       data-has-diagram={Boolean(presented)}
@@ -165,7 +167,7 @@ export function RepositoryWorkspace({
         <div
           id={videoId}
           role="region"
-          aria-label="Explainer video"
+          aria-label={t("workspace.videoTab")}
           className={styles.fold}
           data-open={videoVisible}
           aria-hidden={!videoVisible}
@@ -210,7 +212,7 @@ export function RepositoryWorkspace({
       <div
         id={historyId}
         role="region"
-        aria-label="Info"
+        aria-label={t("workspace.info")}
         className={styles.fold}
         data-open={historyVisible}
         aria-hidden={!historyVisible}
@@ -267,7 +269,7 @@ export function RepositoryWorkspace({
       </div>
       {failed && state.latestSessionAudit && (
         <details className={styles.diagnostics}>
-          <summary>Technical details</summary>
+          <summary>{t("workspace.technicalDetails")}</summary>
           <GenerationAuditPanel audit={state.latestSessionAudit} />
         </details>
       )}

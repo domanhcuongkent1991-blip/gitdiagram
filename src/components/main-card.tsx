@@ -8,10 +8,8 @@ import { Button } from "~/components/ui/button";
 import { exampleRepos } from "~/lib/exampleRepos";
 import { parseGitHubRepoUrl } from "~/features/diagram/github-url";
 import { SponsorSlot } from "~/components/sponsor-slot";
-import {
-  clearRecentDiagrams,
-  useRecentDiagrams,
-} from "~/features/recent/recent-diagrams";
+import { useRecentDiagrams, clearRecentDiagrams } from "~/features/recent/recent-diagrams";
+import { useTranslations } from "next-intl";
 import { captureAnalyticsEvent } from "~/lib/analytics-client";
 
 const CHIP_CLASS =
@@ -22,6 +20,7 @@ const CHIP_CLASS =
  * browser has opened some, its recent public diagrams.
  */
 export default function MainCard({ sponsor = true }: { sponsor?: boolean }) {
+  const t = useTranslations("home.mainCard");
   const [repoUrl, setRepoUrl] = useState("");
   const recent = useRecentDiagrams();
   const [error, setError] = useState("");
@@ -33,7 +32,7 @@ export default function MainCard({ sponsor = true }: { sponsor?: boolean }) {
 
     const parsed = parseGitHubRepoUrl(repoUrl);
     if (!parsed) {
-      setError("Please enter a valid GitHub repository URL or owner/repo");
+      setError(t("errorInvalidRepo"));
       return;
     }
 
@@ -53,11 +52,11 @@ export default function MainCard({ sponsor = true }: { sponsor?: boolean }) {
       <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-6">
         <div className="flex gap-2.5 sm:gap-4">
           <label htmlFor="repository-input" className="sr-only">
-            GitHub repository
+            {t("githubRepoLabel")}
           </label>
           <Input
             id="repository-input"
-            placeholder="owner/repo or GitHub URL"
+            placeholder={t("placeholder")}
             className="neo-input h-14 min-w-0 flex-1 rounded-md px-4 py-0 text-base font-bold placeholder:text-base placeholder:font-normal placeholder:text-gray-700 sm:h-10 sm:px-4 sm:py-6 sm:text-lg sm:placeholder:text-lg dark:placeholder:text-neutral-400"
             value={repoUrl}
             onChange={(e) => setRepoUrl(e.target.value)}
@@ -74,7 +73,7 @@ export default function MainCard({ sponsor = true }: { sponsor?: boolean }) {
               strokeWidth={2.75}
               aria-hidden="true"
             />
-            <span className="max-sm:sr-only">Diagram</span>
+            <span className="max-sm:sr-only">{t("submit")}</span>
           </Button>
         </div>
 
@@ -91,10 +90,8 @@ export default function MainCard({ sponsor = true }: { sponsor?: boolean }) {
         <div className="space-y-4">
           <div className="flex items-center gap-2.5 sm:block sm:space-y-3">
             <div className="shrink-0 text-sm font-medium text-gray-700 sm:text-base dark:text-neutral-300">
-              <span className="sm:hidden">Try:</span>
-              <span className="hidden sm:inline">
-                Try these example repositories:
-              </span>
+              <span className="sm:hidden">{t("tryShort")}</span>
+              <span className="hidden sm:inline">{t("tryExamples")}</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {Object.entries(exampleRepos).map(([name, path]) => (
@@ -115,8 +112,8 @@ export default function MainCard({ sponsor = true }: { sponsor?: boolean }) {
           {recent.length > 0 && (
             <div className="flex items-center gap-2.5 sm:block sm:space-y-3">
               <div className="shrink-0 text-sm font-medium text-gray-700 sm:text-base dark:text-neutral-300">
-                <span className="sm:hidden">Recent:</span>
-                <span className="hidden sm:inline">Your recent diagrams:</span>
+                <span className="sm:hidden">{t("recentShort")}</span>
+                <span className="hidden sm:inline">{t("recentDiagrams")}</span>
               </div>
               <div className="flex min-w-0 gap-2">
                 {recent.slice(0, 4).map((entry, index) => (
@@ -142,8 +139,8 @@ export default function MainCard({ sponsor = true }: { sponsor?: boolean }) {
                 <Button
                   type="button"
                   variant="outline"
-                  title="Clear recent diagrams"
-                  aria-label="Clear recent diagrams"
+                  title={t("clearRecent")}
+                  aria-label={t("clearRecent")}
                   className="size-9 shrink-0 border-2 border-black bg-transparent p-0 text-black hover:bg-purple-300 sm:size-10 dark:border-black dark:bg-transparent dark:text-[hsl(var(--foreground))] dark:hover:bg-[hsl(var(--neo-panel-muted))]"
                   onClick={clearRecentDiagrams}
                 >

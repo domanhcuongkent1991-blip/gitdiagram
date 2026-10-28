@@ -22,8 +22,8 @@ function openOverview() {
 }
 
 describe("generation experience", () => {
-  it("shows an accessible route loading state", () => {
-    render(<Loading />);
+  it("shows an accessible route loading state", async () => {
+    render(await Loading());
     expect(screen.getByRole("status")).toHaveTextContent("Loading diagram");
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveClass("sr-only");

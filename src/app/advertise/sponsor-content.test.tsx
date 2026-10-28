@@ -152,25 +152,25 @@ describe("advertise availability", () => {
     });
   });
 
-  it("drops the booking note once the last booking ends", () => {
+  it("drops the booking note once the last booking ends", async () => {
     const view = render(
-      <SponsorPageContent
-        content={createSponsorContent(
+      await SponsorPageContent({
+        content: createSponsorContent(
           stats,
           Date.parse(coderabbitCampaign.startsAt),
-        )}
-      />,
+        ),
+      }),
     );
     expect(screen.getByText("January 18 campaign booked by")).toBeTruthy();
     // Temporal's logo: once in the advertiser row, twice in the booking note.
     expect(screen.getAllByAltText("Temporal").length).toBeGreaterThanOrEqual(2);
     view.rerender(
-      <SponsorPageContent
-        content={createSponsorContent(
+      await SponsorPageContent({
+        content: createSponsorContent(
           stats,
           Date.parse(temporalExclusiveCampaign.endsAt),
-        )}
-      />,
+        ),
+      }),
     );
     expect(screen.queryByText(/campaign booked by/)).toBeNull();
     expect(screen.getByText("Available now.")).toBeTruthy();
@@ -194,8 +194,8 @@ describe("advertise availability", () => {
     );
   });
 
-  it("says plainly when the audience figures could not be loaded", () => {
-    render(<SponsorPageContent content={createSponsorContent(null)} />);
+  it("says plainly when the audience figures could not be loaded", async () => {
+    render(await SponsorPageContent({ content: createSponsorContent(null) }));
     expect(
       screen.getByText(/audience figures could not be loaded/),
     ).toBeTruthy();

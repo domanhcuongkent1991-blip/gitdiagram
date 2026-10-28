@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { formatCompact } from "~/lib/format";
 import type { AdminState, ClaudeCredit } from "~/features/admin/types";
 import { ConfirmButton } from "./confirm-dialog";
 import { Since, Tile } from "./ui";
+
+/** A next-intl translator, e.g. from useTranslations("admin.budget"). */
+type BudgetTranslator = (
+  key: string,
+  values?: Record<string, string | number | Date>,
+) => string;
 
 // Today's budgets and the balances behind them, with the two actions they
 // offer: starting a count over and recording the Claude balance.
@@ -31,7 +38,7 @@ async function post<T = unknown>(
   }).catch(() => null);
   if (response?.status === 401) {
     window.location.reload();
-    return { error: "Signed out. Sign in again." };
+    return { error: "signed-out" };
   }
   const parsed = (await response?.json().catch(() => null)) as
     (T & { error?: string }) | null;
@@ -52,32 +59,29 @@ function ResetUsage({
   used: number;
   onDone: () => void;
 }) {
-  const noun = target === "videos" ? "videos" : "MP4 downloads";
+  const t = useTranslations("admin.budget");
+  const tc = useTranslations("admin.common");
+  const noun = target === "videos" ? t("nounVideos") : t("nounMp4s");
   const counted =
-    used === 1 ? (target === "videos" ? "video" : "MP4 download") : noun;
+    used === 1 ? (target === "videos" ? t("oneVideo") : t("oneMp4")) : noun;
   return (
     <ConfirmButton
-      label="Reset today's count"
-      ariaLabel={`Reset today's ${target === "videos" ? "video" : "MP4"} count`}
-      title={`Reset today's ${noun}?`}
-      description={
-        <>
-          This sets today&apos;s {used} {counted} back to 0 and clears every
-          person&apos;s and connection&apos;s count for today, so everyone can
-          make {noun} again right away. It cannot be undone.
-        </>
-      }
-      confirmLabel="Yes, reset"
-      busyLabel="Resetting…"
-      onConfirm={async () =>
-        (
-          await post(
-            "/api/admin/reset",
-            { target },
-            "The reset did not go through. Try again.",
-          )
-        ).error
-      }
+      label={t("resetButton")}
+      ariaLabel={t("resetAria", {
+        target: target === "videos" ? t("targetVideo") : t("targetMp4"),
+      })}
+      title={t("resetTitle", { noun })}
+      description={t("resetDescription", { used, counted, noun })}
+      confirmLabel={tc("yesReset")}
+      busyLabel={tc("resetting")}
+      onConfirm={async () => {
+        const { error } = await post(
+          "/api/admin/reset",
+          { target },
+          t("resetFailed"),
+        );
+        return error === "signed-out" ? t("signedOut") : error;
+      }}
       onDone={onDone}
     />
   );
@@ -92,45 +96,43 @@ function SetClaudeCredit({
 }: {
   onSaved: (credit: ClaudeCredit) => void;
 }) {
+  const t = useTranslations("admin.budget");
   const [value, setValue] = useState("");
   const usd = Number(value.replace(/[$,\s]/g, ""));
   const valid = value.trim() !== "" && Number.isFinite(usd) && usd >= 0;
   return (
     <ConfirmButton
-      label="Update balance"
-      ariaLabel="Update the Claude balance"
-      title="Update the Claude balance"
-      description={
-        <>
-          Anthropic has no API for the balance, so copy it from the{" "}
+      label={t("updateBalance")}
+      ariaLabel={t("updateAria")}
+      title={t("updateTitle")}
+      description={t.rich("updateDescription", {
+        link: (chunks) => (
           <a
-            href="https://platform.claude.com/settings/billing"
+            href="https://platform.cloudflare.com/settings/billing"
             target="_blank"
             rel="noreferrer"
             className="underline"
           >
-            Console billing page
-          </a>{" "}
-          after each top-up. From then on, spend is taken off it every minute.
-          Keep auto-reload off, or the number drifts low.
-        </>
-      }
-      confirmLabel="Save balance"
-      busyLabel="Saving…"
+            {chunks}
+          </a>
+        ),
+      })}
+      confirmLabel={t("saveBalance")}
+      busyLabel={t("savingBalance")}
       canConfirm={valid}
       onConfirm={async () => {
         const { error, answer } = await post<{ credit?: ClaudeCredit }>(
           "/api/admin/claude-credit",
           { usd },
-          "The balance was not saved. Try again.",
+          t("balanceSaveFailed"),
         );
         if (answer?.credit) onSaved(answer.credit);
-        return error;
+        return error === "signed-out" ? t("signedOut") : error;
       }}
       onDone={() => setValue("")}
     >
       <label className="flex flex-col gap-1 text-sm font-semibold">
-        Balance in the Console (USD)
+        {t("balanceLabel")}
         <input
           inputMode="decimal"
           autoFocus
@@ -150,10 +152,15 @@ function SetClaudeCredit({
  * operator's own runs count too, so it can exceed the budget's numbers.
  */
 function healthLine(
-  health: NonNullable<AdminState["videoHealth"]>["render"] | undefined,
+  health: NonNullable<AdminState["videoHealth"]>["generate"] | undefined,
+  t: BudgetTranslator,
 ): string | null {
   if (!health) return null;
-  return `Last 2 days: ${health.complete} made · ${health.error} failed · ${health.lost} lost`;
+  return t("healthLine", {
+    complete: health.complete,
+    error: health.error,
+    lost: health.lost,
+  });
 }
 
 export function BudgetTiles({
@@ -167,8 +174,9 @@ export function BudgetTiles({
   onCredit: (credit: ClaudeCredit) => void;
 }) {
   const video = state?.video;
-  const videosHealth = healthLine(state?.videoHealth?.generate);
-  const rendersHealth = healthLine(state?.videoHealth?.render);
+  const t = useTranslations("admin.budget");
+  const videosHealth = healthLine(state?.videoHealth?.generate, t);
+  const rendersHealth = healthLine(state?.videoHealth?.render, t);
   const quota = state?.diagramQuota;
   const mcp = state?.mcp;
   const credit =
@@ -177,7 +185,7 @@ export function BudgetTiles({
   return (
     <div className="grid grid-cols-2 gap-3 lg:col-span-2">
       <Tile
-        label="Videos today"
+        label={t("videosToday")}
         value={video ? `${video.videos.used} / ${video.videos.limit}` : "–"}
         meter={
           video ? video.videos.used / Math.max(1, video.videos.limit) : null
@@ -185,8 +193,8 @@ export function BudgetTiles({
         sub={
           video ? (
             <>
-              {video.videos.personLimit} per person ·{" "}
-              {video.videos.networkLimit} per connection
+              {t("perPerson", { count: video.videos.personLimit })} ·{" "}
+              {t("perConnection", { count: video.videos.networkLimit })}
               {videosHealth ? <div>{videosHealth}</div> : null}
             </>
           ) : undefined
@@ -202,7 +210,7 @@ export function BudgetTiles({
         }
       />
       <Tile
-        label="MP4s today"
+        label={t("mp4sToday")}
         value={video ? `${video.renders.used} / ${video.renders.limit}` : "–"}
         meter={
           video ? video.renders.used / Math.max(1, video.renders.limit) : null
@@ -220,7 +228,7 @@ export function BudgetTiles({
       />
       <div className="col-span-2">
         <Tile
-          label="Voice balance (OpenRouter)"
+          label={t("voiceBalance")}
           value={
             state?.voiceCreditUsd == null
               ? "–"
@@ -228,20 +236,21 @@ export function BudgetTiles({
           }
           sub={
             state?.voicePausedUntil
-              ? `Ran out: new videos paused until ${new Date(state.voicePausedUntil).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+              ? t("voiceRanOut", {
+                  time: new Date(state.voicePausedUntil).toLocaleTimeString(
+                    [],
+                    { hour: "numeric", minute: "2-digit" },
+                  ),
+                })
               : state?.voiceCreditUsd == null
-                ? "Balance unreadable"
-                : "Prepaid. New videos pause if it runs out."
+                ? t("balanceUnreadable")
+                : t("prepaid")
           }
         />
       </div>
       <div className="col-span-2">
         <Tile
-          label={
-            quota?.enabled
-              ? "Free diagram tokens today"
-              : "Free diagram tokens today (cap off)"
-          }
+          label={quota?.enabled ? t("tokensToday") : t("tokensCapOff")}
           value={
             quota
               ? `${formatCompact(quota.usedTokens)} / ${formatCompact(quota.limitTokens)}`
@@ -254,37 +263,41 @@ export function BudgetTiles({
           }
           sub={
             quota
-              ? `${formatCompact(quota.reservedTokens)} held by runs in progress`
+              ? t("reserved", {
+                  count: formatCompact(quota.reservedTokens),
+                })
               : undefined
           }
         />
       </div>
       <div className="col-span-2">
         <Tile
-          label="Agent calls today (MCP)"
+          label={t("agentCalls")}
           value={mcp ? formatCompact(mcp.today) : "–"}
           sub={
             mcp
               ? [
-                  `${formatCompact(mcp.week)} in the last 7 days`,
+                  t("last7", { count: formatCompact(mcp.week) }),
                   mcp.clients.length
-                    ? `sessions: ${mcp.clients
-                        .slice(0, 4)
-                        .map(([name, count]) => `${name} ${count}`)
-                        .join(", ")}`
+                    ? t("sessions", {
+                        list: mcp.clients
+                          .slice(0, 4)
+                          .map(([name, count]) => `${name} ${count}`)
+                          .join(", "),
+                      })
                     : "",
                 ]
                   .filter(Boolean)
                   .join(" · ")
               : state
-                ? "Counts unreadable"
+                ? t("countsUnreadable")
                 : undefined
           }
         />
       </div>
       <div className="col-span-2">
         <Tile
-          label="Claude API credit"
+          label={t("creditBalance")}
           value={
             credit && creditSet
               ? dollars.format(credit.setUsd! - credit.spentUsd)
@@ -297,17 +310,19 @@ export function BudgetTiles({
           }
           sub={
             !state ? undefined : state.claudeCredit === "no-key" ? (
-              "Needs ANTHROPIC_ADMIN_KEY."
+              t("creditNoKey")
             ) : !credit ? (
-              "Anthropic's spend reports could not be read just now. Trying again each minute."
+              t("creditUnreadable")
             ) : creditSet ? (
               <>
-                {dollars.format(credit.spentUsd)} spent since{" "}
-                {dollars.format(credit.setUsd!)} was entered{" "}
-                <Since ms={credit.setAt!} /> ago · updates each minute
+                {t("creditSpentSince", {
+                  spent: dollars.format(credit.spentUsd),
+                  entered: dollars.format(credit.setUsd!),
+                })}{" "}
+                <Since ms={credit.setAt!} /> · {t("creditEachMinute")}
               </>
             ) : (
-              "Enter the balance from the Console to start counting."
+              t("enterBalance")
             )
           }
           action={

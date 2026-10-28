@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { GenerationCostSummary } from "~/features/diagram/cost";
 import type { GenerationSessionAudit } from "~/features/diagram/graph";
 
@@ -31,6 +32,7 @@ export function GenerationAuditPanel({
   audit,
   error,
 }: GenerationAuditPanelProps) {
+  const t = useTranslations("admin.audit");
   if (!audit && !error) {
     return null;
   }
@@ -40,19 +42,17 @@ export function GenerationAuditPanel({
   return (
     <div className="w-full max-w-5xl rounded-xl border border-neutral-300 bg-white/80 p-4 text-sm text-neutral-800 shadow-sm dark:border-neutral-700 dark:bg-neutral-950/60 dark:text-neutral-100">
       <p className="font-semibold" role={error ? "alert" : undefined}>
-        {audit?.status === "failed"
-          ? "We couldn't generate this diagram"
-          : "Generation details"}
+        {audit?.status === "failed" ? t("failedTitle") : t("detailsTitle")}
       </p>
       {error && <p className="mt-2 text-red-700 dark:text-red-300">{error}</p>}
       {audit && (
         <details className="mt-4 text-left">
           <summary className="neo-link cursor-pointer">
-            Technical details
+            {t("technicalDetails")}
           </summary>
           {audit?.failureStage && (
             <p className="mt-2 text-xs tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
-              Failure stage: {audit.failureStage}
+              {t("failureStage", { stage: audit.failureStage })}
             </p>
           )}
           {diagnosticMessage && (
@@ -60,11 +60,11 @@ export function GenerationAuditPanel({
               {diagnosticMessage}
             </pre>
           )}
-          {renderCostSummary("Estimated cost", audit?.estimatedCost)}
-          {renderCostSummary("Final cost", audit?.finalCost)}
+          {renderCostSummary(t("estimatedCost"), audit?.estimatedCost)}
+          {renderCostSummary(t("finalCost"), audit?.finalCost)}
           {audit?.stageUsages?.length ? (
             <div className="mt-4 rounded-md border border-neutral-200 p-3 dark:border-neutral-800">
-              <p className="font-medium">Stage usage</p>
+              <p className="font-medium">{t("stageUsage")}</p>
               <pre className="mt-2 overflow-x-auto text-xs whitespace-pre-wrap">
                 {JSON.stringify(audit.stageUsages, null, 2)}
               </pre>
@@ -72,7 +72,7 @@ export function GenerationAuditPanel({
           ) : null}
           {audit?.graphAttempts?.length ? (
             <div className="mt-4 rounded-md border border-neutral-200 p-3 dark:border-neutral-800">
-              <p className="font-medium">Graph attempts</p>
+              <p className="font-medium">{t("graphAttempts")}</p>
               <pre className="mt-2 overflow-x-auto text-xs whitespace-pre-wrap">
                 {JSON.stringify(audit.graphAttempts, null, 2)}
               </pre>
@@ -80,7 +80,7 @@ export function GenerationAuditPanel({
           ) : null}
           {audit?.graph ? (
             <div className="mt-4 rounded-md border border-neutral-200 p-3 dark:border-neutral-800">
-              <p className="font-medium">Graph JSON</p>
+              <p className="font-medium">{t("graphJson")}</p>
               <pre className="mt-2 overflow-x-auto text-xs whitespace-pre-wrap">
                 {JSON.stringify(audit.graph, null, 2)}
               </pre>
@@ -88,7 +88,7 @@ export function GenerationAuditPanel({
           ) : null}
           {audit?.compiledDiagram ? (
             <div className="mt-4 rounded-md border border-neutral-200 p-3 dark:border-neutral-800">
-              <p className="font-medium">Compiled Mermaid</p>
+              <p className="font-medium">{t("compiledMermaid")}</p>
               <pre className="mt-2 overflow-x-auto text-xs whitespace-pre-wrap">
                 {audit.compiledDiagram}
               </pre>

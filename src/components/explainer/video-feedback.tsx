@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Check, Send } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { sendFeedback } from "~/features/explainer/feedback";
 import controls from "~/components/generation/workspace.module.css";
 import styles from "./video-feedback.module.css";
@@ -27,6 +28,7 @@ export function VideoFeedbackForm({
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const t = useTranslations("explainer");
   const field = useRef<HTMLTextAreaElement>(null);
   const id = useId();
 
@@ -49,9 +51,7 @@ export function VideoFeedbackForm({
       });
       setSent(true);
     } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : "Could not send feedback.",
-      );
+      setError(caught instanceof Error ? caught.message : "sendFailed");
     } finally {
       setSending(false);
     }
@@ -62,7 +62,7 @@ export function VideoFeedbackForm({
       <div className={styles.form} role="status">
         <p className={styles.sent}>
           <Check size={16} aria-hidden="true" />
-          Sent. Thank you! I read every one.
+          {t("feedback.sent")}
         </p>
         <div className={styles.actions}>
           <button
@@ -70,7 +70,7 @@ export function VideoFeedbackForm({
             className={controls.actionButton}
             onClick={onClose}
           >
-            Close
+            {t("feedback.close")}
           </button>
         </div>
       </div>
@@ -79,12 +79,9 @@ export function VideoFeedbackForm({
   return (
     <form className={styles.form} onSubmit={(event) => void submit(event)}>
       <label className={styles.label} htmlFor={`${id}-message`}>
-        What did you think of this video?
+        {t("feedback.prompt")}
       </label>
-      <p className={styles.hint}>
-        It goes straight to my inbox (I&apos;m Ahmed, I make GitDiagram). What
-        worked, what felt off, what you wish it showed.
-      </p>
+      <p className={styles.hint}>{t("feedback.hint")}</p>
       <textarea
         ref={field}
         id={`${id}-message`}
@@ -96,8 +93,8 @@ export function VideoFeedbackForm({
         onChange={(event) => setMessage(event.target.value)}
       />
       <label className={styles.label} htmlFor={`${id}-email`}>
-        Your email{" "}
-        <span className={styles.optional}>(if you want a reply)</span>
+        {t("feedback.email")}{" "}
+        <span className={styles.optional}>{t("feedback.emailOptional")}</span>
       </label>
       <input
         id={`${id}-email`}
@@ -110,7 +107,7 @@ export function VideoFeedbackForm({
       />
       {error && (
         <p className={styles.error} role="alert">
-          {error}
+          {error === "sendFailed" ? t("feedback.sendFailed") : error}
         </p>
       )}
       <div className={styles.actions}>
@@ -120,14 +117,14 @@ export function VideoFeedbackForm({
           disabled={sending || !message.trim()}
         >
           <Send size={15} aria-hidden="true" />
-          {sending ? "Sending…" : "Send feedback"}
+          {sending ? t("feedback.sending") : t("feedback.send")}
         </button>
         <button
           type="button"
           className={controls.actionButton}
           onClick={onClose}
         >
-          Cancel
+          {t("feedback.cancel")}
         </button>
       </div>
     </form>

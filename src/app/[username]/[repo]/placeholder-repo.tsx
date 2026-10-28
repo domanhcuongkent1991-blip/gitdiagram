@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import MainCard from "~/components/main-card";
 
@@ -14,41 +15,49 @@ export const placeholderRepoMetadata: Metadata = {
  * Shown for a copied example address such as /user/repo: explains the URL and
  * offers the home page's form. It never reads storage, GitHub or a model.
  */
-export function PlaceholderRepo({
+export async function PlaceholderRepo({
   username,
   repo,
 }: {
   username: string;
   repo: string;
 }) {
+  const t = await getTranslations("generation.placeholder");
   const typed = `${username}/${repo}`;
   return (
     <main className="flex min-h-[calc(100svh-9.75rem)] flex-col justify-center overflow-x-clip px-4 pt-6 pb-3 sm:block sm:min-h-0 sm:px-8 sm:py-8 md:p-8">
       <div className="mx-auto mb-6 max-w-4xl pt-4 sm:mb-10 sm:pt-0 lg:mt-8">
         <h1 className="text-center text-[clamp(2rem,9vw,3rem)] leading-[1.05] font-bold tracking-tight text-balance sm:text-5xl">
-          Swap{" "}
-          <span className="text-purple-600 dark:text-[hsl(var(--neo-button))]">
-            {typed}
-          </span>{" "}
-          for a real repository
+          {t.rich("swapHeading", {
+            typed,
+            repo: (chunks) => (
+              <span className="text-purple-600 dark:text-[hsl(var(--neo-button))]">
+                {chunks}
+              </span>
+            ),
+          })}
         </h1>
         <div className="mx-auto mt-5 max-w-[22rem] space-y-3 text-center text-[1.0625rem] leading-6 text-balance text-[hsl(var(--neo-soft-text))] sm:mt-8 sm:max-w-2xl sm:text-lg sm:leading-normal">
           <p>
-            <span className="font-semibold">{typed}</span> is the example
-            address, not a repository. Put any GitHub repository in its place.
+            {t.rich("exampleAddress", {
+              typed,
+              repo: (chunks) => <span className="font-semibold">{chunks}</span>,
+            })}
           </p>
           <p className="break-words">
-            For example,{" "}
-            <span className="font-mono text-[0.95em]">
-              github.com/fastapi/fastapi
-            </span>{" "}
-            becomes{" "}
-            <Link
-              href="/fastapi/fastapi"
-              className="font-mono text-[0.95em] font-semibold underline decoration-2 underline-offset-4"
-            >
-              gitdiagram.com/fastapi/fastapi
-            </Link>
+            {t.rich("exampleLink", {
+              code: (chunks) => (
+                <span className="font-mono text-[0.95em]">{chunks}</span>
+              ),
+              link: (chunks) => (
+                <Link
+                  href="/fastapi/fastapi"
+                  className="font-mono text-[0.95em] font-semibold underline decoration-2 underline-offset-4"
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
           </p>
         </div>
       </div>

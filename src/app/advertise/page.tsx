@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { getSponsorStats } from "~/server/sponsor-stats";
 import { SponsorPageContent } from "./sponsor-page-content";
 import { createSponsorContent } from "./sponsor-content";
@@ -14,6 +15,7 @@ export const revalidate = 300;
 
 export default async function SponsorPage() {
   const stats = await getSponsorStats();
-  const content = createSponsorContent(stats);
+  const t = await getTranslations("advertise");
+  const content = createSponsorContent(stats, undefined, t);
   return <SponsorPageContent content={content} />;
 }

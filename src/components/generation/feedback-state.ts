@@ -1,19 +1,17 @@
 import type { DiagramStreamState } from "~/features/diagram/types";
-import { githubAccessTitle } from "~/features/diagram/github-access";
+import { hasGithubAccessTitle } from "~/features/diagram/github-access";
+import type { Translate } from "~/i18n/translate";
 import { generationStep } from "./progress";
 
-function generationTitle(state: DiagramStreamState) {
-  if (state.status === "idle") return "Opening your diagram";
+function generationTitle(state: DiagramStreamState, t: Translate) {
+  if (state.status === "idle") return t("titles.opening");
   if (state.status === "started")
-    return state.lastActivityAt
-      ? "Reading the repository"
-      : "Connecting to your repository";
-  if (generationStep(state.status) === 1)
-    return "Understanding the architecture";
-  if (state.status === "graph_retry") return "Refining the connections";
+    return state.lastActivityAt ? t("titles.reading") : t("titles.connecting");
+  if (generationStep(state.status) === 1) return t("titles.understanding");
+  if (state.status === "graph_retry") return t("titles.refining");
   if (state.status === "diagram_compiling" || state.status === "complete")
-    return "Drawing your diagram";
-  return "Mapping the connections";
+    return t("titles.drawing");
+  return t("titles.mapping");
 }
 
 export function feedbackState(
@@ -22,6 +20,7 @@ export function feedbackState(
   renderFailed: boolean,
   seconds: number,
   now: number,
+  t: Translate,
 ) {
   const failed = state.status === "error" || renderFailed;
   const cancelled = state.errorCode === "GENERATION_CANCELLED";
@@ -39,22 +38,23 @@ export function feedbackState(
       cancelled,
       quiet,
       title: cancelled
-        ? "Generation stopped"
+        ? t("errors.cancelled")
         : renderFailed
-          ? "Couldn’t display the diagram"
-          : (githubAccessTitle(state.errorCode) ??
-            "Couldn’t generate the diagram"),
+          ? t("errors.couldntDisplay")
+          : hasGithubAccessTitle(state.errorCode)
+            ? t(`errors.access.${state.errorCode}`)
+            : t("errors.couldntGenerate"),
       description: cancelled ? "" : state.error,
     };
   return {
     failed,
     cancelled,
     quiet,
-    title: quiet ? "Waiting for an update" : generationTitle(state),
+    title: quiet ? t("quiet.title") : generationTitle(state, t),
     description: quiet
-      ? "No recent updates from the server."
+      ? t("quiet.description")
       : seconds >= 20 && state.lastActivityAt && !rendering
-        ? "Still working · receiving updates"
+        ? t("stillWorking")
         : "",
   };
 }

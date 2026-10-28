@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import MainCard from "~/components/main-card";
 import Hero from "~/components/hero";
 import { JsonLd } from "~/components/json-ld";
@@ -8,9 +9,8 @@ import { GITHUB_REPO_URL, SITE_URL } from "~/lib/site";
 import { cn } from "~/lib/utils";
 import { VIDEOS_ENABLED } from "~/lib/video-flag";
 
-// The server-rendered parts (the header's star count, which sponsor campaign
-// is scheduled) refresh every five minutes instead of freezing at build time.
-export const revalidate = 300;
+// i18n: layout reads the locale cookie, so this page renders per-request
+// instead of using ISR (see docs/superpowers/specs/2026-10-28-vi-en-ui-i18n-design.md).
 
 const HOME_DESCRIPTION = VIDEOS_ENABLED
   ? "Turn any GitHub repository into an interactive architecture diagram or a one-minute explainer video for quick codebase understanding."
@@ -63,7 +63,8 @@ const applicationJsonLd = {
   ],
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const t = await getTranslations("home.banner");
   return (
     // Clipped sideways at the screen's edge: the banner's glow reaches past it
     // on narrow phones and would otherwise let the page scroll sideways.
@@ -88,10 +89,10 @@ export default function HomePage() {
                 <NewBadge />
                 {/* The full line needs ~330px; the smallest phones get a shorter one. */}
                 <span className="max-[359px]:hidden">
-                  Watch any repo explained in a minute
+                  {t("watchFull")}
                 </span>
                 <span className="hidden max-[359px]:inline">
-                  Repos explained in a minute
+                  {t("watchShort")}
                 </span>
                 <span aria-hidden="true" className="promo-banner-arrow">
                   →
@@ -109,13 +110,10 @@ export default function HomePage() {
         >
           <p>
             {VIDEOS_ENABLED
-              ? "Turn any GitHub repository into an interactive diagram or explainer video."
-              : "Turn any GitHub repository into an interactive diagram for visualization."}
+              ? t("taglineVideos")
+              : t("taglineNoVideos")}
           </p>
-          <p className="hidden sm:block">
-            Or, replace &apos;hub&apos; with &apos;diagram&apos; in any GitHub
-            URL.
-          </p>
+          <p className="hidden sm:block">{t("hubTip")}</p>
         </div>
       </div>
       <div className="flex justify-center sm:mb-16 lg:mb-0">

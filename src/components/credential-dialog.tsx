@@ -2,6 +2,7 @@
 
 import { useId, useState, type ReactNode } from "react";
 import { Check, Copy, ExternalLink } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type {
   CredentialKind,
@@ -19,23 +20,6 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Input } from "./ui/input";
-
-const CREDENTIAL_LABELS = {
-  openai_api_key: {
-    noun: "key",
-    name: "API key",
-    inputLabel: "OpenAI API key",
-    placeholder: "sk-...",
-    saved: "Key saved. Paste a new one to replace it.",
-  },
-  github_pat: {
-    noun: "token",
-    name: "GitHub token",
-    inputLabel: "GitHub personal access token",
-    placeholder: "github_pat_...",
-    saved: "Token saved. Paste a new one to replace it.",
-  },
-} as const;
 
 interface CredentialDialogProps {
   credential: CredentialKind;
@@ -81,7 +65,14 @@ export function CredentialDialog({
 }: CredentialDialogProps) {
   const inputId = useId();
   const hintId = useId();
-  const labels = CREDENTIAL_LABELS[credential];
+  const t = useTranslations("dialogs.credentials");
+  const labels = {
+    noun: t(`${credential}.noun`),
+    name: t(`${credential}.name`),
+    inputLabel: t(`${credential}.inputLabel`),
+    placeholder: t(`${credential}.placeholder`),
+    saved: t(`${credential}.saved`),
+  };
   const [showAlternative, setShowAlternative] = useState(false);
   const {
     clear,
@@ -96,10 +87,10 @@ export function CredentialDialog({
     value,
   } = useCredentialSetting({ credential, isOpen });
   const errors = {
-    load: `Could not load the saved-${labels.noun} status.`,
-    save: `Could not save the ${labels.name}. Please try again.`,
-    clear: `Could not clear the ${labels.name}. Please try again.`,
-    disconnect: "Could not disconnect GitHub. Please try again.",
+    load: t("errorLoad", { noun: labels.noun }),
+    save: t("errorSave", { name: labels.name }),
+    clear: t("errorClear", { name: labels.name }),
+    disconnect: t("errorDisconnect"),
   };
   const showForm = !primary || showAlternative || isConfigured;
   const errorAlert = error && (
@@ -113,19 +104,22 @@ export function CredentialDialog({
   const dataUsageDetails = (
     <details className="text-xs text-neutral-700 dark:text-neutral-300">
       <summary className="neo-link w-fit cursor-pointer font-medium focus-visible:outline-2 focus-visible:outline-offset-4">
-        How your data is used
+        {t("howDataUsed")}
       </summary>
       <p className="mt-2 leading-relaxed">
-        {dataUsage} You can also{" "}
-        <a
-          href={GITHUB_REPO_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="neo-link underline"
-        >
-          self-host
-        </a>
-        .
+        {dataUsage}{" "}
+        {t.rich("alsoSelfHost", {
+          link: (chunks) => (
+            <a
+              href={GITHUB_REPO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="neo-link underline"
+            >
+              {chunks}
+            </a>
+          ),
+        })}
       </p>
     </details>
   );
@@ -192,7 +186,7 @@ export function CredentialDialog({
         {showForm && (
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-3">
-              <h3 className="text-sm font-bold">1. Create a {labels.noun}</h3>
+              <h3 className="text-sm font-bold">{t("createNoun", { noun: labels.noun })}</h3>
               <p className="text-sm text-neutral-700 dark:text-neutral-300">
                 {setup.instructions}
               </p>
@@ -209,7 +203,7 @@ export function CredentialDialog({
             </div>
             <div className="space-y-2">
               <label htmlFor={inputId} className="block text-sm font-bold">
-                2. Paste your {labels.noun}
+                {t("pasteNoun", { noun: labels.noun })}
               </label>
               <Input
                 id={inputId}
@@ -221,7 +215,7 @@ export function CredentialDialog({
                 spellCheck={false}
                 placeholder={
                   isConfigured
-                    ? `Paste a replacement ${labels.noun}`
+                    ? t("pasteReplacement", { noun: labels.noun })
                     : labels.placeholder
                 }
                 value={value}
@@ -236,7 +230,7 @@ export function CredentialDialog({
               >
                 {isConfigured
                   ? labels.saved
-                  : "Saved in this browser for 30 days. Clear it anytime."}
+                  : t("savedNotice")}
               </p>
             </div>
             {dataUsageDetails}
@@ -250,8 +244,8 @@ export function CredentialDialog({
                   className="neo-link min-h-10 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {pendingAction === "clear"
-                    ? "Clearing..."
-                    : `Clear ${labels.noun}`}
+                    ? t("clearing")
+                    : t("clearNoun", { noun: labels.noun })}
                 </button>
               )}
               <div className="ml-auto grid grid-cols-2 gap-3">
@@ -261,7 +255,7 @@ export function CredentialDialog({
                   disabled={isPending}
                   className={controls.actionButton}
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
@@ -269,10 +263,10 @@ export function CredentialDialog({
                   className={`${controls.actionButton} ${controls.primary}`}
                 >
                   {pendingAction === "save"
-                    ? "Saving..."
+                    ? t("saving")
                     : onSaved
-                      ? "Save & retry"
-                      : `Save ${labels.noun}`}
+                      ? t("saveRetry")
+                      : t("saveNoun", { noun: labels.noun })}
                 </button>
               </div>
             </div>
@@ -285,6 +279,7 @@ export function CredentialDialog({
 
 function CopySetupPrompt({ prompt }: { prompt: string }) {
   const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const t = useTranslations("dialogs.credentials");
 
   const copyPrompt = async () => {
     try {
@@ -308,18 +303,16 @@ function CopySetupPrompt({ prompt }: { prompt: string }) {
           <Copy size={16} aria-hidden="true" />
         )}
         <span aria-live="polite">
-          {status === "copied"
-            ? "Copied! Paste into your AI"
-            : "Copy prompt for my AI"}
+          {status === "copied" ? t("copied") : t("copyPrompt")}
         </span>
       </button>
       {status === "failed" && (
         <div className="space-y-2">
           <p role="alert" className="text-sm">
-            Couldn’t copy. Select the prompt below to copy it manually.
+            {t("copyFailed")}
           </p>
           <textarea
-            aria-label="AI setup prompt"
+            aria-label={t("aiPromptLabel")}
             readOnly
             value={prompt}
             onFocus={(event) => event.currentTarget.select()}

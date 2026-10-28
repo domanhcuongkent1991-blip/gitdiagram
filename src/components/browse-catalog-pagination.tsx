@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 interface BrowseCatalogPaginationProps {
   onPageChange: (nextPage: number) => void;
   page: number;
@@ -11,13 +13,14 @@ export function BrowseCatalogPagination({
   page,
   totalPages,
 }: BrowseCatalogPaginationProps) {
+  const t = useTranslations("browse.pagination");
   const hasPreviousPage = page > 1;
   const hasNextPage = page < totalPages;
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <p className="text-sm text-[hsl(var(--neo-soft-text))] dark:text-neutral-300">
-        Page {page} of {totalPages}
+        {t("pageOf", { page, totalPages })}
       </p>
       <div className="flex gap-2 sm:gap-3">
         <button
@@ -28,7 +31,7 @@ export function BrowseCatalogPagination({
             hasPreviousPage ? "" : "cursor-not-allowed opacity-50"
           }`}
         >
-          Previous
+          {t("previous")}
         </button>
         <button
           type="button"
@@ -40,7 +43,7 @@ export function BrowseCatalogPagination({
               : "cursor-not-allowed border-[3px] border-black bg-[hsl(var(--neo-button))] opacity-50 dark:border-[#1a0d30]"
           }`}
         >
-          Next
+          {t("next")}
         </button>
       </div>
     </div>

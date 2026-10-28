@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { ExternalLink, Key, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
 import type { DiagramStateResponse } from "~/features/diagram/types";
@@ -59,6 +60,7 @@ export default function RepoPageClient({
   initialStateIsAuthoritative = false,
   readout,
 }: RepoPageClientProps) {
+  const t = useTranslations("generation");
   const [showGithubAccess, setShowGithubAccess] = useState(false);
   const [connectResult, dismissConnectResult] = useGitHubConnectResult("repo");
   useStarReminder();
@@ -155,7 +157,7 @@ export default function RepoPageClient({
                   className={`${controls.actionButton} ${controls.primary}`}
                 >
                   <LockKeyhole size={14} aria-hidden="true" />
-                  Add GitHub access
+                  {t("addGithubAccess")}
                 </button>
               )}
               {showApiKeyCta && (
@@ -165,7 +167,7 @@ export default function RepoPageClient({
                   className={`${controls.actionButton} ${controls.primary}`}
                 >
                   <Key size={14} aria-hidden="true" />
-                  Use Your AI Key
+                  {t("useAiKey")}
                 </button>
               )}
               <a
@@ -175,7 +177,7 @@ export default function RepoPageClient({
                 className={controls.actionButton}
               >
                 <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                Open repository on GitHub
+                {t("openOnGithub")}
               </a>
             </>
           }

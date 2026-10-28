@@ -11,6 +11,7 @@ import {
   Code2,
   MessageSquareHeart,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   renderFileUrl,
   streamExplainerRender,
@@ -33,12 +34,20 @@ import { VideoFeedbackForm } from "./video-feedback";
 
 type Copied = "link" | "badge" | "picture" | null;
 
-const RENDER_FAILED = "The MP4 could not be made. Try again.";
+// Local failures are stored as message keys; a server failure keeps its text.
+const RENDER_FAILED = "renderFailed";
+const COPY_BLOCKED = "copyBlocked";
 
-function jobLabel(format: RenderFormat, step: VideoRenderStep) {
-  if (step === "starting") return "Starting the renderer";
-  if (step === "finishing") return "Adding the soundtrack";
-  return `Rendering the ${format === "vertical" ? "9:16" : "16:9"} MP4 with captions`;
+function jobLabel(
+  t: ReturnType<typeof useTranslations>,
+  format: RenderFormat,
+  step: VideoRenderStep,
+) {
+  if (step === "starting") return t("share.starting");
+  if (step === "finishing") return t("share.finishing");
+  return t("share.rendering", {
+    ratio: format === "vertical" ? "9:16" : "16:9",
+  });
 }
 
 function triggerDownload(href: string) {
@@ -65,6 +74,9 @@ export function ExplainerShare({
   position?: () => number;
 }) {
   const { owner, repo } = video.meta;
+  const t = useTranslations("explainer");
+  const jobLabelT = (format: RenderFormat, step: VideoRenderStep) =>
+    jobLabel(t, format, step);
   const [job, setJob] = useState<{
     format: RenderFormat;
     progress: number;
@@ -137,7 +149,7 @@ export function ExplainerShare({
       window.clearTimeout(copyTimer.current);
       copyTimer.current = window.setTimeout(() => setCopied(null), 1800);
     } catch {
-      setError("Copying was blocked by the browser.");
+      setError(COPY_BLOCKED);
     }
   };
 
@@ -147,7 +159,7 @@ export function ExplainerShare({
   const poster = `${SITE_URL}/api/video/file?${new URLSearchParams({ username: owner, repo, format: "poster" }).toString()}`;
   const picture = `[![${owner}/${repo}, explained in a one-minute video](${poster})](${url})`;
   const label = (format: RenderFormat, idle: string) =>
-    job?.format === format ? "Making MP4…" : idle;
+    job?.format === format ? t("share.makingMp4") : idle;
 
   return (
     <div className={styles.share}>
@@ -159,17 +171,17 @@ export function ExplainerShare({
           disabled={job !== null || stale}
         >
           <Download size={15} aria-hidden="true" />
-          {label("landscape", "Download MP4")}
+          {label("landscape", t("share.download"))}
         </button>
         <button
           type="button"
           className={controls.actionButton}
           onClick={() => void download("vertical")}
           disabled={job !== null || stale}
-          title="9:16 for Shorts, Reels and TikTok"
+          title={t("share.verticalTitle")}
         >
           <Smartphone size={15} aria-hidden="true" />
-          {label("vertical", "Vertical MP4")}
+          {label("vertical", t("share.vertical"))}
         </button>
         {canShare ? (
           <button
@@ -190,7 +202,7 @@ export function ExplainerShare({
             }
           >
             <Share2 size={15} aria-hidden="true" />
-            Share
+            {t("share.share")}
           </button>
         ) : (
           <button
@@ -203,34 +215,36 @@ export function ExplainerShare({
             ) : (
               <Link2 size={15} aria-hidden="true" />
             )}
-            {copied === "link" ? "Link copied" : "Copy link"}
+            {copied === "link" ? t("share.linkCopied") : t("share.copyLink")}
           </button>
         )}
         <button
           type="button"
           className={controls.actionButton}
           onClick={() => void copy(badge, "badge")}
-          title="Markdown for a README badge that opens this video"
+          title={t("share.badgeTitle")}
         >
           {copied === "badge" ? (
             <Check size={15} aria-hidden="true" />
           ) : (
             <Code2 size={15} aria-hidden="true" />
           )}
-          {copied === "badge" ? "Badge copied" : "README badge"}
+          {copied === "badge" ? t("share.badgeCopied") : t("share.readmeBadge")}
         </button>
         <button
           type="button"
           className={controls.actionButton}
           onClick={() => void copy(picture, "picture")}
-          title="Markdown for a README picture that opens this video"
+          title={t("share.pictureTitle")}
         >
           {copied === "picture" ? (
             <Check size={15} aria-hidden="true" />
           ) : (
             <ImageIcon size={15} aria-hidden="true" />
           )}
-          {copied === "picture" ? "Picture copied" : "README picture"}
+          {copied === "picture"
+            ? t("share.pictureCopied")
+            : t("share.readmePicture")}
         </button>
         {canFeedback && (
           <button
@@ -240,7 +254,7 @@ export function ExplainerShare({
             aria-expanded={feedback}
           >
             <MessageSquareHeart size={15} aria-hidden="true" />
-            Send feedback
+            {t("share.sendFeedback")}
           </button>
         )}
       </div>
@@ -254,35 +268,36 @@ export function ExplainerShare({
       )}
       {/* Announces each step once; the percentage beside it is not read out. */}
       <span className="sr-only" role="status">
-        {job ? jobLabel(job.format, job.step) : ""}
+        {job ? jobLabelT(job.format, job.step) : ""}
       </span>
       {job && (
         <div className={styles.shareJob}>
           <JobRow
-            label={jobLabel(job.format, job.step)}
+            label={jobLabelT(job.format, job.step)}
             fraction={job.progress}
           />
-          <div className={styles.shareNote}>
-            The first download takes about a minute; after that it is instant
-            for everyone.
-          </div>
+          <div className={styles.shareNote}>{t("share.firstDownload")}</div>
         </div>
       )}
       {stale ? (
         <div className={styles.error} role="alert">
-          This video was just updated.{" "}
+          {t("share.stale")}{" "}
           <button
             type="button"
             className={styles.metaButton}
             onClick={() => window.location.reload()}
           >
-            Reload to get the new one
+            {t("share.reloadNew")}
           </button>
         </div>
       ) : (
         error && (
           <div className={styles.error} role="alert">
-            {error}
+            {error === "renderFailed"
+              ? t("share.renderFailed")
+              : error === "copyBlocked"
+                ? t("share.copyBlocked")
+                : error}
           </div>
         )
       )}

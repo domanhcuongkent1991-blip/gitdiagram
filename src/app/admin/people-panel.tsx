@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { clock } from "~/features/admin/format";
 import { nextExpiry } from "~/features/admin/presence";
 import type { LiveVisitor, VideoAudience } from "~/features/admin/types";
 import { number, Panel } from "./ui";
+
+/** A next-intl translator, e.g. from useTranslations("admin.people"). */
+export type PriorityTranslator = (
+  key: string,
+  values?: Record<string, string | number | Date>,
+) => string;
 
 const HISTORY_POINTS = 600; // ten minutes, one point a second
 
@@ -27,13 +34,14 @@ export function usePeopleClock(tabs: LiveVisitor[], lastMessageAt: number) {
 }
 
 function Sparkline({ points }: { points: number[] }) {
+  const t = useTranslations("admin.people");
   const [hover, setHover] = useState<number | null>(null);
   const width = 600;
   const height = 72;
   if (points.length < 2)
     return (
       <div className="flex h-[72px] items-center text-xs text-[hsl(var(--neo-soft-text))]">
-        Drawing the last ten minutes as they happen…
+        {t("drawing")}
       </div>
     );
   const max = Math.max(1, ...points);
@@ -50,7 +58,10 @@ function Sparkline({ points }: { points: number[] }) {
         preserveAspectRatio="none"
         className="h-[72px] w-full"
         role="img"
-        aria-label={`People here over the last ${points.length} seconds, peak ${max}`}
+        aria-label={t("sparkTitle", {
+          seconds: points.length,
+          peak: number.format(max),
+        })}
         onPointerMove={(event) => {
           const box = event.currentTarget.getBoundingClientRect();
           const ratio = (event.clientX - box.left) / box.width;
@@ -84,11 +95,18 @@ function Sparkline({ points }: { points: number[] }) {
         />
       </svg>
       <div className="mt-1 flex justify-between text-[11px] text-[hsl(var(--neo-soft-text))] tabular-nums">
-        <span>{Math.round(points.length / 60) || "<1"} min ago</span>
+        <span>
+          {t("minAgo", {
+            minutes: Math.round(points.length / 60) || t("lessThan1"),
+          })}
+        </span>
         <span>
           {hover === null
-            ? "now"
-            : `${points.length - 1 - hover}s ago: ${points[hover]} here`}
+            ? t("now")
+            : t("sAgo", {
+                seconds: points.length - 1 - hover,
+                count: number.format(points[hover] ?? 0),
+              })}
         </span>
       </div>
     </div>
@@ -116,15 +134,18 @@ function History({ here }: { here: number }) {
 }
 
 /** What being in a priority place means, under the current audience switch. */
-export function priorityHint(audience: VideoAudience | undefined): string {
-  const perks = "People here get more videos a day.";
+export function priorityHint(
+  audience: VideoAudience | undefined,
+  t: PriorityTranslator,
+): string {
+  const perks = t("perks");
   switch (audience) {
     case "priority":
-      return `The only places new videos can be made right now, on any device. ${perks}`;
+      return `${t("hintPriority")} ${perks}`;
     case "desktop":
-      return `Any device here can make new videos; elsewhere only desktops can. ${perks}`;
+      return `${t("hintDesktop")} ${perks}`;
     case "everyone":
-      return `Anyone anywhere can make new videos right now. ${perks}`;
+      return `${t("hintEveryone")} ${perks}`;
     default:
       return perks;
   }
@@ -147,13 +168,19 @@ export function PeoplePanel({
   const inView = people.filter((person) => person.v === 1).length;
   const mobile = people.filter((person) => person.d === "m").length;
   const withTabOpen = new Set(tabs.map((tab) => tab.b)).size;
+  const t = useTranslations("admin.people");
   return (
     <Panel
-      title="People here now"
+      title={t("title")}
       className="lg:col-span-3"
       aside={
         peak
-          ? `Peak today ${number.format(peak.count)}${peak.at ? ` at ${clock(peak.at)}` : ""}`
+          ? peak.at
+            ? t("peakAt", {
+                count: number.format(peak.count),
+                time: clock(peak.at),
+              })
+            : t("peak", { count: number.format(peak.count) })
           : null
       }
     >
@@ -164,15 +191,11 @@ export function PeoplePanel({
         <dl className="grid grid-cols-3 gap-x-6 gap-y-2 text-sm sm:grid-cols-5">
           {(
             [
-              ["Looking now", inView, undefined],
-              ["Mobile", mobile, undefined],
-              ["Priority places", stats.priority, priorityHint(audience)],
-              ["Tabs open", tabs.length, undefined],
-              [
-                "Clock/IP mismatch",
-                stats.mismatched,
-                "Browser clock set to a different time zone from where the IP address is: often a VPN, sometimes a traveller or a carrier network",
-              ],
+              [t("looking"), inView, undefined],
+              [t("mobile"), mobile, undefined],
+              [t("priorityPlaces"), stats.priority, priorityHint(audience, t)],
+              [t("tabsOpen"), tabs.length, undefined],
+              [t("mismatch"), stats.mismatched, t("mismatchTitle")],
             ] as const
           ).map(([label, value, title]) => (
             <div key={label} title={title}>
@@ -185,9 +208,7 @@ export function PeoplePanel({
         </dl>
       </div>
       <p className="mt-3 text-xs text-[hsl(var(--neo-soft-text))]">
-        One per browser, with a GitDiagram tab in view or seen in the last two
-        minutes. Browsers with any tab open, background tabs included:{" "}
-        {number.format(withTabOpen)}.
+        {t("explanation", { tabs: number.format(withTabOpen) })}
       </p>
       <div className="mt-4">
         <History here={people.length} />

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { CredentialDialog } from "./credential-dialog";
 
 interface ApiKeyDialogProps {
@@ -18,30 +20,20 @@ const AI_PROMPT = [
 ].join("\n\n");
 
 export function ApiKeyDialog(props: ApiKeyDialogProps) {
+  const t = useTranslations("dialogs.apiKey");
   return (
     <CredentialDialog
       {...props}
       credential="openai_api_key"
-      title="OpenAI API key"
-      description="Use your own key to generate diagrams with your OpenAI account."
+      title={t("title")}
+      description={t("description")}
       setup={{
-        instructions: (
-          <>
-            Create a secret key in your OpenAI project. Generations with this
-            key are billed to your OpenAI account.
-          </>
-        ),
+        instructions: t("instructions"),
         url: API_KEYS_URL,
-        linkLabel: "Create key on OpenAI",
+        linkLabel: t("linkLabel"),
         aiPrompt: AI_PROMPT,
       }}
-      dataUsage={
-        <>
-          Your key is kept in a protected browser cookie for 30 days. Page
-          JavaScript cannot read it. GitDiagram uses it only on the server to
-          generate your diagrams.
-        </>
-      }
+      dataUsage={t("dataUsage")}
     />
   );
 }

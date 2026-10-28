@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { since } from "~/features/admin/format";
 import type { LinkStatus } from "./use-live-site";
@@ -76,10 +77,11 @@ export function Tile({
 }
 
 export function BarList({ rows }: { rows: Array<[string, number]> }) {
+  const t = useTranslations("admin.barList");
   const max = Math.max(1, ...rows.map(([, count]) => count));
   if (!rows.length)
     return (
-      <p className="text-sm text-[hsl(var(--neo-soft-text))]">Nobody yet.</p>
+      <p className="text-sm text-[hsl(var(--neo-soft-text))]">{t("nobody")}</p>
     );
   return (
     <ul className="flex flex-col gap-1.5">
@@ -108,6 +110,7 @@ export function StatusPill({
   status: LinkStatus;
   latency: number | null;
 }) {
+  const t = useTranslations("admin.status");
   const tone =
     status === "live"
       ? "bg-green-500"
@@ -116,10 +119,12 @@ export function StatusPill({
         : "bg-red-500";
   const label =
     status === "live"
-      ? `Live${latency !== null ? ` · ${latency} ms` : ""}`
+      ? latency !== null
+        ? t("live", { ms: latency })
+        : t("liveNoLatency")
       : status === "connecting"
-        ? "Connecting"
-        : "Reconnecting";
+        ? t("connecting")
+        : t("reconnecting");
   return (
     <span className="inline-flex items-center gap-2 rounded-full border-2 border-black bg-white px-3 py-1 text-sm font-semibold dark:bg-black/30">
       <span className={`relative h-2.5 w-2.5 rounded-full ${tone}`}>

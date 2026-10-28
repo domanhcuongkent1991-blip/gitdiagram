@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 const VioletSparkle = ({ className }: { className?: string }) => (
   <svg
     className={className}
@@ -66,15 +68,16 @@ const FlankSparkle = ({
   </svg>
 );
 
-const Hero = () => {
+const Hero = async () => {
+  const t = await getTranslations("home.hero");
   return (
     <>
       <div className="mx-auto w-fit sm:hidden">
         <h1 className="text-center text-[clamp(2.5rem,11.5vw,3.3rem)] leading-[0.95] font-bold tracking-tight">
-          Repository to <br />
+          {t("titleLine1")} <br />
           {/* Sizes are in em so the stars scale with the fluid title. */}
           <span className="relative inline-block">
-            diagram
+            {t("titleLine2")}
             <FlankSparkle
               className="flank-sparkle-left pointer-events-none absolute top-[57%] -left-[1.18em] h-auto w-[0.8em] -translate-y-1/2 -rotate-10"
               fillClassName="fill-violet-500 dark:fill-[hsl(var(--neo-button))]"
@@ -90,8 +93,8 @@ const Hero = () => {
       <div className="relative mx-auto hidden w-full flex-row items-center justify-center sm:flex">
         <VioletSparkle className="absolute left-0 h-auto w-20 flex-shrink-0 -translate-y-16 p-2 md:relative md:ml-0 md:w-24 md:translate-x-10 md:-translate-y-0 lg:absolute lg:ml-32 lg:-translate-x-full lg:-translate-y-10" />
         <h1 className="relative inline-block w-full text-center text-5xl font-bold tracking-tighter md:text-6xl lg:pt-5 lg:text-7xl">
-          Repository to <br />
-          diagram&nbsp;
+          {t("titleLine1")} <br />
+          {t("titleLine2")}&nbsp;
         </h1>
         <SkySparkle className="right-0 bottom-0 hidden h-auto w-16 flex-shrink-0 -translate-x-10 translate-y-20 md:block lg:absolute lg:w-20 lg:-translate-x-12 lg:translate-y-4" />
       </div>

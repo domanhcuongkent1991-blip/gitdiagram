@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Skeleton } from "~/components/ui/skeleton";
 import {
   BrowseCatalogControls,
@@ -9,6 +10,7 @@ import {
 const browseSkeletonRows = Array.from({ length: 6 }, (_, index) => index);
 
 export function BrowseCatalogLoadingState(props: BrowseCatalogControlsProps) {
+  const t = useTranslations("browse.table");
   return (
     <div className="space-y-4 sm:space-y-6" aria-busy="true" aria-live="polite">
       <BrowseCatalogControls {...props} />
@@ -25,11 +27,11 @@ export function BrowseCatalogLoadingState(props: BrowseCatalogControlsProps) {
           </colgroup>
           <thead className="hidden lg:table-header-group">
             <tr className="border-b-[3px] border-black bg-[hsl(var(--neo-panel-muted))] text-left text-sm tracking-[0.16em] uppercase dark:border-[#0d0a19] dark:bg-[hsl(var(--neo-panel-muted))]">
-              <th className="px-5 py-4 font-semibold">Repository</th>
-              <th className="px-5 py-4 font-semibold">Stars</th>
-              <th className="px-5 py-4 font-semibold">Last Generated</th>
+              <th className="px-5 py-4 font-semibold">{t("repository")}</th>
+              <th className="px-5 py-4 font-semibold">{t("stars")}</th>
+              <th className="px-5 py-4 font-semibold">{t("lastGenerated")}</th>
               <th className="px-5 py-4 font-semibold lg:pr-6 xl:pr-7">
-                Actions
+                {t("actions")}
               </th>
             </tr>
           </thead>

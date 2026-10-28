@@ -7,9 +7,11 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTranslator } from "~/test/next-intl-mock";
+import { priorityHint, type PriorityTranslator } from "./people-panel";
+
 import type { AdminState } from "~/features/admin/types";
 import { AdminDashboard } from "./admin-dashboard";
-import { priorityHint } from "./people-panel";
 
 // The Search & AI panel reads its own report (visibility-panel.test.tsx).
 vi.mock("./visibility-panel", () => ({ VisibilityPanel: () => null }));
@@ -127,6 +129,9 @@ describe("signing out everywhere", () => {
   });
 });
 
+const tPeople: PriorityTranslator = (key, values) =>
+  String(createTranslator("admin.people")(key, values));
+
 describe("the dashboard's warnings", () => {
   it("warns when the switches shown could not be read", async () => {
     vi.mocked(fetch).mockImplementation(async () =>
@@ -139,10 +144,12 @@ describe("the dashboard's warnings", () => {
   });
 
   it("explains priority places by the audience switch", () => {
-    expect(priorityHint("priority")).toMatch(/^The only places/);
-    expect(priorityHint("desktop")).toMatch(/elsewhere only desktops/);
-    expect(priorityHint("everyone")).toMatch(/^Anyone anywhere/);
-    expect(priorityHint(undefined)).toBe("People here get more videos a day.");
+    expect(priorityHint("priority", tPeople)).toMatch(/^The only places/);
+    expect(priorityHint("desktop", tPeople)).toMatch(/elsewhere only desktops/);
+    expect(priorityHint("everyone", tPeople)).toMatch(/^Anyone anywhere/);
+    expect(priorityHint(undefined, tPeople)).toBe(
+      "People here get more videos a day.",
+    );
   });
 });
 

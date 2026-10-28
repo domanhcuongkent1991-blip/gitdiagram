@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, Clock3, Star } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { createPortal } from "react-dom";
 import type { RefObject } from "react";
 
@@ -68,6 +69,7 @@ export function BrowseCatalogResults({
   hoverPreviewStatus,
   result,
 }: BrowseCatalogResultsProps) {
+  const t = useTranslations("browse.table");
   const showingStart =
     result.total === 0 ? 0 : (result.page - 1) * result.pageSize + 1;
   const showingEnd = Math.min(result.total, result.page * result.pageSize);
@@ -76,14 +78,17 @@ export function BrowseCatalogResults({
     <>
       <div className="flex items-center justify-between">
         <p className="text-sm text-[hsl(var(--neo-soft-text))] dark:text-neutral-300">
-          {showingStart}–{showingEnd} of{" "}
-          {totalCountFormatter.format(result.total)} public diagrams
+          {t("showing", {
+            start: showingStart,
+            end: showingEnd,
+            total: totalCountFormatter.format(result.total),
+          })}
         </p>
       </div>
 
       <div className="neo-panel overflow-hidden rounded-lg">
         <table className="block w-full border-collapse lg:table lg:table-fixed">
-          <caption className="sr-only">Public repository diagrams</caption>
+          <caption className="sr-only">{t("caption")}</caption>
           <colgroup className="hidden lg:table-column-group">
             <col />
             <col className="w-[104px]" />
@@ -92,15 +97,15 @@ export function BrowseCatalogResults({
           </colgroup>
           <thead className="hidden lg:table-header-group">
             <tr className="border-b-[3px] border-black bg-[hsl(var(--neo-panel-muted))] text-left text-sm tracking-[0.16em] uppercase dark:border-[#0d0a19] dark:bg-[hsl(var(--neo-panel-muted))]">
-              <th className="px-5 py-4 font-semibold">Repository</th>
+              <th className="px-5 py-4 font-semibold">{t("repository")}</th>
               <th className="hidden px-5 py-4 font-semibold lg:table-cell lg:w-[104px]">
-                Stars
+                {t("stars")}
               </th>
               <th className="w-[188px] px-5 py-4 font-semibold lg:w-[188px] xl:w-[220px]">
-                Last Generated
+                {t("lastGenerated")}
               </th>
               <th className="w-[280px] px-5 py-4 font-semibold lg:pr-6 xl:w-[304px] xl:pr-7">
-                Actions
+                {t("actions")}
               </th>
             </tr>
           </thead>
@@ -143,7 +148,7 @@ export function BrowseCatalogResults({
                           aria-hidden="true"
                           className="size-3.5 lg:hidden"
                         />
-                        <span className="sr-only">Last generated </span>
+                        <span className="sr-only">{t("lastGeneratedSr")}</span>
                         <GeneratedAtTime value={item.lastSuccessfulAt} />
                       </span>
                     </div>
@@ -155,7 +160,7 @@ export function BrowseCatalogResults({
                         prefetch={false}
                         className="neo-button inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold whitespace-nowrap lg:min-h-0 lg:min-w-0 lg:px-3 lg:py-2 lg:text-sm xl:w-auto xl:min-w-[148px] xl:px-4"
                       >
-                        Open Diagram
+                        {t("openDiagram")}
                         <ArrowRight
                           aria-hidden="true"
                           className="size-4 lg:hidden"

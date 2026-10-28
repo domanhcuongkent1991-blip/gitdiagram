@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ChevronDown,
@@ -49,6 +50,7 @@ const SETTLE_MS = 120;
  * reel on screen plays and the rest wait at their start.
  */
 export function ReelsFeed({ initial }: { initial: VideoPage }) {
+  const t = useTranslations("reelsPage");
   const [cards, setCards] = useState(initial.cards);
   const [videos, setVideos] = useState<Record<string, VideoArtifact | null>>(
     {},
@@ -265,8 +267,8 @@ export function ReelsFeed({ initial }: { initial: VideoPage }) {
       <div className={styles.shell}>
         <div className={styles.column}>
           <div className={styles.empty}>
-            <p>No videos yet.</p>
-            <Link href="/videos">Back to videos</Link>
+            <p>{t("noVideos")}</p>
+            <Link href="/videos">{t("backToVideos")}</Link>
           </div>
         </div>
       </div>
@@ -310,7 +312,7 @@ export function ReelsFeed({ initial }: { initial: VideoPage }) {
           <Link
             href="/videos"
             className={styles.back}
-            aria-label="Back to videos"
+            aria-label={t("backToVideos")}
           >
             <ChevronLeft size={24} strokeWidth={2.5} />
           </Link>
@@ -323,7 +325,7 @@ export function ReelsFeed({ initial }: { initial: VideoPage }) {
               setMuted((value) => !value);
             }}
             aria-pressed={muted}
-            aria-label={muted ? "Unmute" : "Mute"}
+            aria-label={muted ? t("unmute") : t("mute")}
           >
             {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
           </button>
@@ -334,7 +336,7 @@ export function ReelsFeed({ initial }: { initial: VideoPage }) {
               type="button"
               className={styles.feedbackBackdrop}
               onClick={() => setFeedback(null)}
-              aria-label="Close feedback"
+              aria-label={t("closeFeedback")}
             />
             <div
               className={`${controls.controlsTheme} ${styles.feedbackPanel}`}
@@ -353,7 +355,7 @@ export function ReelsFeed({ initial }: { initial: VideoPage }) {
             <span className={styles.startPlay}>
               <Play size={34} fill="currentColor" />
             </span>
-            <span className={styles.startLabel}>Tap to watch with sound</span>
+            <span className={styles.startLabel}>{t("tapToWatch")}</span>
           </button>
         )}
       </div>
@@ -363,7 +365,7 @@ export function ReelsFeed({ initial }: { initial: VideoPage }) {
           className={styles.iconButton}
           onClick={() => goTo(activeRef.current - 1)}
           disabled={active === 0}
-          aria-label="Previous video"
+          aria-label={t("previousVideo")}
         >
           <ChevronUp size={22} />
         </button>
@@ -372,7 +374,7 @@ export function ReelsFeed({ initial }: { initial: VideoPage }) {
           className={styles.iconButton}
           onClick={() => goTo(activeRef.current + 1)}
           disabled={active >= cards.length - 1}
-          aria-label="Next video"
+          aria-label={t("nextVideo")}
         >
           <ChevronDown size={22} />
         </button>
@@ -409,6 +411,7 @@ function ReelSlide({
   onFeedback?: (at?: number) => void;
   onFailed: () => void;
 }) {
+  const t = useTranslations("reelsPage");
   const slide = useRef<HTMLElement>(null);
   const info = useRef<HTMLDivElement>(null);
   const rail = useRef<HTMLDivElement>(null);
@@ -450,7 +453,7 @@ function ReelSlide({
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
-      window.prompt("Copy this link", url);
+      window.prompt(t("copyPrompt"), url);
     }
   };
 
@@ -458,7 +461,7 @@ function ReelSlide({
     <section
       ref={slide}
       className={styles.slide}
-      aria-label={`${name}: ${card.title}`}
+      aria-label={t("videoAria", { name, title: card.title })}
       aria-current={active ? "true" : undefined}
     >
       <div className={styles.placeholder} aria-hidden="true">
@@ -483,7 +486,9 @@ function ReelSlide({
         type="button"
         className={styles.tap}
         onClick={onTap}
-        aria-label={playing ? `Pause ${name}` : `Play ${name}`}
+        aria-label={
+          playing ? t("pauseAria", { name }) : t("playAria", { name })
+        }
       >
         {showPaused && (
           <span className={styles.pausedIcon} aria-hidden="true">
@@ -491,9 +496,7 @@ function ReelSlide({
           </span>
         )}
         {failed && (
-          <span className={styles.unavailable}>
-            This video could not be loaded. Swipe on.
-          </span>
+          <span className={styles.unavailable}>{t("videoUnavailable")}</span>
         )}
       </button>
       <div ref={info} className={styles.info}>
@@ -507,7 +510,7 @@ function ReelSlide({
         <p className={styles.meta}>
           {card.language && <span>{card.language}</span>}
           <Link href={`${diagram}/video`} className={styles.metaLink}>
-            Full video
+            {t("fullVideo")}
           </Link>
         </p>
       </div>
@@ -517,7 +520,10 @@ function ReelSlide({
           target="_blank"
           rel="noopener noreferrer"
           className={styles.railItem}
-          aria-label={`${name} on GitHub, ${card.stars.toLocaleString("en")} stars`}
+          aria-label={t("githubAria", {
+            name,
+            stars: card.stars.toLocaleString("en"),
+          })}
         >
           <span className={styles.railIcon}>
             <Star size={21} />
@@ -527,24 +533,24 @@ function ReelSlide({
         <Link
           href={diagram}
           className={styles.railItem}
-          aria-label={`Diagram of ${name}`}
+          aria-label={t("diagramAria", { name })}
         >
           <span className={styles.railIcon}>
             <Network size={21} />
           </span>
-          <span className={styles.railLabel}>Diagram</span>
+          <span className={styles.railLabel}>{t("diagramLabel")}</span>
         </Link>
         <button
           type="button"
           className={styles.railItem}
           onClick={() => void share()}
-          aria-label={`Share ${name}`}
+          aria-label={t("shareAria", { name })}
         >
           <span className={styles.railIcon}>
             {copied ? <Link2 size={21} /> : <Send size={20} />}
           </span>
           <span className={styles.railLabel} aria-live="polite">
-            {copied ? "Copied" : "Share"}
+            {copied ? t("copied") : t("share")}
           </span>
         </button>
         {onFeedback && (
@@ -556,12 +562,12 @@ function ReelSlide({
                 video ? fraction.current * video.timing.DURATION : undefined,
               )
             }
-            aria-label={`Send feedback on the video of ${name}`}
+            aria-label={t("feedbackAria", { name })}
           >
             <span className={`${styles.railIcon} ${styles.feedbackIcon}`}>
               <MessageSquareHeart size={21} />
             </span>
-            <span className={styles.railLabel}>Feedback</span>
+            <span className={styles.railLabel}>{t("feedbackLabel")}</span>
           </button>
         )}
       </div>

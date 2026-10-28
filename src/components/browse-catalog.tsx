@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   normalizeBrowseQuery,
@@ -47,6 +48,7 @@ export function BrowseCatalog({
   initialPreviewDiagrams,
   initialQuery,
 }: BrowseCatalogProps) {
+  const t = useTranslations("browse.catalog");
   const normalizedInitialQuery = normalizeBrowseQuery(initialQuery);
   const [loadState, setLoadState] = useState<BrowseLoadState>({
     error: null,
@@ -199,7 +201,7 @@ export function BrowseCatalog({
             error:
               error instanceof Error
                 ? error.message
-                : "Failed to load browse index.",
+                : t("loadFailed"),
             isLoaded: true,
             showSlowIndicator: false,
           }));
@@ -213,7 +215,7 @@ export function BrowseCatalog({
       }
       abortController.abort();
     };
-  }, [isQueryReady, minStars, page, searchInput, sort]);
+  }, [isQueryReady, minStars, page, searchInput, sort, t]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -268,14 +270,13 @@ export function BrowseCatalog({
     return (
       <div className="neo-panel p-8">
         <p className="text-sm font-semibold tracking-[0.2em] text-black/70 uppercase dark:text-[hsl(var(--foreground))]">
-          Browse
+          {t("label")}
         </p>
         <h2 className="mt-3 text-2xl font-bold sm:text-3xl">
-          Browse index unavailable
+          {t("unavailable")}
         </h2>
         <p className="mt-4 max-w-3xl text-base text-[hsl(var(--neo-soft-text))] dark:text-neutral-300">
-          {loadError ??
-            "This page reads only the hosted browse index. The index is currently unavailable in storage."}
+          {loadError ?? t("unavailableDetail")}
         </p>
       </div>
     );
@@ -307,20 +308,20 @@ export function BrowseCatalog({
 
       {showSlowResultsIndicator && !isLoaded ? (
         <p className="text-sm text-[hsl(var(--neo-soft-text))] dark:text-neutral-300">
-          Updating results...
+          {t("updating")}
         </p>
       ) : null}
 
       {result.total === 0 ? (
         <div className="neo-panel rounded-lg px-5 py-8 text-center sm:p-10">
           <p className="text-sm font-semibold tracking-[0.2em] text-black/70 uppercase dark:text-[hsl(var(--foreground))]">
-            Browse
+            {t("label")}
           </p>
           <h2 className="mt-3 text-2xl font-bold sm:text-3xl">
-            No diagrams match these filters
+            {t("noMatch")}
           </h2>
           <p className="mt-4 text-base text-[hsl(var(--neo-soft-text))] dark:text-neutral-300">
-            Try a broader search or lower the minimum star filter.
+            {t("noMatchHint")}
           </p>
         </div>
       ) : (

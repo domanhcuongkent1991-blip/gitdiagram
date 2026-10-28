@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   describeEvent,
@@ -11,10 +12,10 @@ import { clock } from "~/features/admin/format";
 import type { LiveFeedEvent, LiveJob } from "~/features/admin/types";
 import { Panel, Since, TOUCH } from "./ui";
 
-const FILTERS: Array<{ value: FeedTopic | "all"; label: string }> = [
-  { value: "all", label: "All" },
-  { value: "diagrams", label: "Diagrams" },
-  { value: "videos", label: "Videos" },
+const FILTERS: Array<{ value: FeedTopic | "all"; key: string }> = [
+  { value: "all", key: "all" },
+  { value: "diagrams", key: "diagrams" },
+  { value: "videos", key: "videos" },
 ];
 
 /** Diagrams, videos and MP4s being made right now, and for how long. */
@@ -25,11 +26,17 @@ export const RunningPanel = memo(function RunningPanel({
 }) {
   const count = (kind: string) =>
     jobs.filter((job) => job.kind === kind).length;
+  const t = useTranslations("admin.running");
   return (
     <Panel
-      title="Running now"
+      title={t("title")}
       className="lg:col-span-2"
-      aside={`${jobs.length} jobs · ${count("diagram")} diagrams · ${count("video")} videos · ${count("render")} MP4s`}
+      aside={t("jobsAside", {
+        jobs: jobs.length,
+        diagrams: count("diagram"),
+        videos: count("video"),
+        renders: count("render"),
+      })}
     >
       {jobs.length ? (
         <ul className="flex flex-col gap-2">
@@ -52,7 +59,7 @@ export const RunningPanel = memo(function RunningPanel({
         </ul>
       ) : (
         <p className="text-sm text-[hsl(var(--neo-soft-text))]">
-          Nothing running.
+          {t("nothing")}
         </p>
       )}
     </Panel>
@@ -65,17 +72,19 @@ export const LiveFeed = memo(function LiveFeed({
   events: LiveFeedEvent[];
 }) {
   const [filter, setFilter] = useState<FeedTopic | "all">("all");
+  const t = useTranslations("admin.feed");
+  const tEvents = useTranslations("admin.events");
   const shown =
     filter === "all"
       ? events
       : events.filter((event) => eventTopic(event.kind) === filter);
   return (
     <Panel
-      title="Live feed"
+      title={t("title")}
       aside={
         <div
           role="group"
-          aria-label="Show events about"
+          aria-label={t("showAbout")}
           className="flex items-center gap-1.5"
         >
           {FILTERS.map((option) => (
@@ -90,7 +99,7 @@ export const LiveFeed = memo(function LiveFeed({
                   : "bg-white hover:bg-purple-100 dark:bg-black/20 dark:hover:bg-black/30"
               }`}
             >
-              {option.label}
+              {t(option.key)}
             </button>
           ))}
         </div>
@@ -99,7 +108,7 @@ export const LiveFeed = memo(function LiveFeed({
       {shown.length ? (
         <ol className="flex flex-col divide-y-2 divide-black/10 sm:max-h-[32rem] sm:overflow-y-auto dark:divide-white/10">
           {shown.map((event) => {
-            const { title, tone, detail } = describeEvent(event);
+            const { title, tone, detail } = describeEvent(event, tEvents);
             const repo = typeof event.repo === "string" ? event.repo : "";
             // Phones stack each event (what and when, then the details,
             // wrapped); wider screens keep one line per event.
@@ -143,8 +152,10 @@ export const LiveFeed = memo(function LiveFeed({
       ) : (
         <p className="text-sm text-[hsl(var(--neo-soft-text))]">
           {filter === "all"
-            ? "Waiting for something to happen."
-            : `No ${filter === "diagrams" ? "diagram" : "video"} events yet.`}
+            ? t("waiting")
+            : t("noneKind", {
+                kind: filter === "diagrams" ? t("kindDiagram") : t("kindVideo"),
+              })}
         </p>
       )}
     </Panel>

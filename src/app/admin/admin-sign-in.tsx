@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 export function AdminSignIn() {
+  const t = useTranslations("admin.signIn");
   const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -23,7 +25,7 @@ export function AdminSignIn() {
     const body = (await response?.json().catch(() => null)) as {
       error?: string;
     } | null;
-    setError(body?.error ?? "Could not sign in. Try again.");
+    setError(body?.error ?? t("fallbackError"));
     setBusy(false);
   }
 
@@ -33,9 +35,9 @@ export function AdminSignIn() {
         onSubmit={signIn}
         className="neo-panel flex w-full max-w-sm flex-col gap-4 rounded-lg p-6"
       >
-        <h1 className="text-2xl font-bold">Operator sign in</h1>
+        <h1 className="text-2xl font-bold">{t("heading")}</h1>
         <label className="flex flex-col gap-2 text-sm font-medium">
-          Operator token
+          {t("token")}
           <input
             type="password"
             autoComplete="current-password"
@@ -58,7 +60,7 @@ export function AdminSignIn() {
           disabled={busy || !token}
           className="neo-button h-11 rounded-md px-4 font-semibold disabled:opacity-60"
         >
-          {busy ? "Signing in…" : "Sign in"}
+          {busy ? t("submitting") : t("submit")}
         </button>
       </form>
     </main>

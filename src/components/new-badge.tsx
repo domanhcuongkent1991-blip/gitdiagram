@@ -1,4 +1,7 @@
+import { useTranslations } from "next-intl";
+
 /** Marks something new: the explainer videos, while they are fresh. */
 export function NewBadge({ className = "" }: { className?: string }) {
-  return <span className={`new-badge ${className}`}>NEW</span>;
+  const t = useTranslations("header");
+  return <span className={`new-badge ${className}`}>{t("newBadge")}</span>;
 }

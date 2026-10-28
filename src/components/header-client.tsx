@@ -6,6 +6,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 
+import { useTranslations } from "next-intl";
+
 import { GitHubIcon } from "~/components/icons/github-icon";
 import { useGitHubConnectResult } from "~/hooks/use-github-connect-result";
 import { formatCompact } from "~/lib/format";
@@ -13,6 +15,7 @@ import { GITHUB_REPO_URL } from "~/lib/site";
 import { VIDEOS_ENABLED } from "~/lib/video-flag";
 
 import { NewBadge } from "./new-badge";
+import { LocaleSwitcher } from "./locale-switcher";
 import { ThemeToggle } from "./theme-toggle";
 
 const loadApiKeyDialog = () =>
@@ -60,6 +63,7 @@ function MobileMenuStarCount({ starCount }: HeaderClientProps) {
 }
 
 export function HeaderClient({ starCount }: HeaderClientProps) {
+  const t = useTranslations("header");
   const pathname = usePathname();
   const [isPrivateReposDialogOpen, setIsPrivateReposDialogOpen] =
     useState(false);
@@ -112,7 +116,7 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
               prefetch={false}
               className="browse-muted-button inline-flex min-h-[42px] items-center rounded-md px-3 py-2 text-sm font-semibold"
             >
-              Browse
+              {t("browse")}
             </Link>
           ) : null}
           <button
@@ -127,7 +131,7 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
             ) : (
               <Menu className="h-4 w-4" aria-hidden="true" />
             )}
-            <span className="max-[360px]:sr-only">Menu</span>
+            <span className="max-[360px]:sr-only">{t("menu")}</span>
           </button>
         </div>
         <nav className="hidden items-center gap-6 sm:flex">
@@ -137,7 +141,7 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
               href="/videos"
               className="flex items-center gap-1.5 text-sm font-semibold text-black transition-colors duration-150 hover:text-purple-600 dark:text-neutral-200 dark:hover:text-[hsl(var(--neo-link-hover))]"
             >
-              Videos
+              {t("videos")}
               <NewBadge />
             </Link>
           )}
@@ -145,7 +149,7 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
             href="/browse"
             className="text-sm font-medium text-black transition-colors duration-150 hover:text-purple-600 dark:text-neutral-200 dark:hover:text-[hsl(var(--neo-link-hover))]"
           >
-            Browse
+            {t("browse")}
           </Link>
           <button
             type="button"
@@ -154,7 +158,7 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
             onClick={() => setIsApiKeyDialogOpen(true)}
             className="text-sm font-medium text-black transition-colors duration-150 hover:text-purple-600 dark:text-neutral-200 dark:hover:text-[hsl(var(--neo-link-hover))]"
           >
-            API Key
+            {t("apiKey")}
           </button>
           <button
             type="button"
@@ -163,8 +167,9 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
             onClick={() => setIsPrivateReposDialogOpen(true)}
             className="text-sm font-medium text-black transition-colors duration-150 hover:text-purple-600 dark:text-neutral-200 dark:hover:text-[hsl(var(--neo-link-hover))]"
           >
-            Private Repos
+            {t("privateRepos")}
           </button>
+          <LocaleSwitcher />
           <ThemeToggle />
           <Link
             href={GITHUB_REPO_URL}
@@ -185,7 +190,7 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
         >
           <button
             type="button"
-            aria-label="Close mobile menu"
+            aria-label={t("closeMobileMenu")}
             tabIndex={isMobileMenuOpen ? 0 : -1}
             onClick={() => setIsMobileMenuOpen(false)}
             className="mobile-menu-overlay absolute inset-0 bg-black/30"
@@ -203,7 +208,7 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="neo-button inline-flex min-h-[48px] items-center justify-between rounded-md px-4 py-3 text-sm font-semibold"
                   >
-                    Videos
+                    {t("videos")}
                     <NewBadge />
                   </Link>
                 )}
@@ -214,7 +219,7 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="browse-muted-button inline-flex min-h-[48px] items-center justify-between rounded-md px-4 py-3 text-sm font-semibold"
                   >
-                    Browse
+                    {t("browse")}
                   </Link>
                 ) : null}
                 <button
@@ -227,7 +232,7 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
                   }}
                   className="browse-muted-button inline-flex min-h-[48px] items-center justify-between rounded-md px-4 py-3 text-sm font-semibold"
                 >
-                  API Key
+                  {t("apiKey")}
                 </button>
                 <button
                   type="button"
@@ -239,8 +244,12 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
                   }}
                   className="browse-muted-button inline-flex min-h-[48px] items-center justify-between rounded-md px-4 py-3 text-sm font-semibold"
                 >
-                  Private Repos
+                  {t("privateRepos")}
                 </button>
+                <LocaleSwitcher
+                  onToggle={() => setIsMobileMenuOpen(false)}
+                  className="browse-muted-button inline-flex min-h-[48px] items-center justify-between rounded-md px-4 py-3 text-sm font-semibold"
+                />
                 <ThemeToggle
                   onToggle={() => setIsMobileMenuOpen(false)}
                   className="browse-muted-button inline-flex min-h-[48px] items-center justify-between rounded-md px-4 py-3 text-sm font-semibold"
@@ -252,7 +261,7 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
                 >
                   <span className="flex items-center gap-2">
                     <GitHubIcon className="h-5 w-5" />
-                    GitHub Repo
+                    {t("githubRepo")}
                   </span>
                   <Suspense fallback={null}>
                     <MobileMenuStarCount starCount={starCount} />

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 import { getCachedBrowsePage } from "~/server/browse-index-cache";
@@ -62,6 +63,7 @@ export default async function BrowsePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
+  const t = await getTranslations("browse");
   const initialQuery: BrowseQuery = {
     q: firstSearchParam(params.q),
     sort: firstSearchParam(params.sort),
@@ -74,10 +76,10 @@ export default async function BrowsePage({
         <section className="mb-5 max-w-3xl sm:mb-8">
           <BrowseTabs active="diagrams" />
           <h1 className="text-4xl leading-[1.05] font-bold tracking-tight text-balance sm:text-5xl">
-            Browse diagrams
+            {t("pageTitle")}
           </h1>
           <p className="mt-3 max-w-[34rem] text-base leading-relaxed text-pretty text-[hsl(var(--neo-soft-text))] sm:leading-normal dark:text-neutral-300">
-            Explore public repositories, one diagram at a time.
+            {t("pageIntro")}
           </p>
         </section>
 

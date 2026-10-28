@@ -18,6 +18,7 @@ import {
   Play,
   RotateCcw,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { ExplainerAudio, type SfxCue } from "~/features/explainer/audio-mixer";
 import { ActivityMark } from "~/components/generation/activity-mark";
 import { STAGE_PATH } from "~/features/explainer/engine";
@@ -107,6 +108,8 @@ export function ExplainerPlayer({
   const scrubber = useRef<HTMLInputElement>(null);
   const clock = useRef<HTMLSpanElement>(null);
   const shownTime = useRef("0:00");
+  const t = useTranslations("explainer");
+  const tv = useTranslations("videosPage");
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [ended, setEnded] = useState(false);
@@ -157,19 +160,22 @@ export function ExplainerPlayer({
         clock.current.textContent = shown;
         scrubber.current?.setAttribute(
           "aria-valuetext",
-          `${shown} of ${totalTime}`,
+          tv("timeOf", { shown, totalTime }),
         );
       }
     },
-    [onTime, totalTime],
+    [onTime, totalTime, tv],
   );
 
   useEffect(() => {
     scrubber.current?.setAttribute(
       "aria-valuetext",
-      `${shownTime.current} of ${totalTime}`,
+      tv("timeOf", {
+        shown: shownTime.current,
+        totalTime,
+      }),
     );
-  }, [totalTime]);
+  }, [totalTime, tv]);
 
   // Full window: the page behind must not scroll or take focus, and Escape
   // leaves.
@@ -230,7 +236,7 @@ export function ExplainerPlayer({
         if (!cancelled) setError(message);
       }, STAGE_TIMEOUT_MS);
     };
-    wait("The video took too long to load.");
+    wait("videoTimeout");
     const onMessage = (event: MessageEvent<StageMessage>) => {
       if (
         event.origin !== window.location.origin ||
@@ -271,7 +277,7 @@ export function ExplainerPlayer({
           setPlaying(false);
         };
         audio.current = mixer;
-        wait("The narration took too long to load.");
+        wait("narrationTimeout");
         mixer
           .load()
           .then(() => {
@@ -282,12 +288,12 @@ export function ExplainerPlayer({
           })
           .catch(() => {
             window.clearTimeout(timeout);
-            if (!cancelled) setError("The narration could not be loaded.");
+            if (!cancelled) setError("narrationFailed");
           });
       } else if (message.type === "error") {
         window.clearTimeout(timeout);
         console.error(`Explainer stage: ${message.message}`);
-        setError("The video could not be drawn.");
+        setError("drawFailed");
       }
     };
     window.addEventListener("message", onMessage);
@@ -476,13 +482,13 @@ export function ExplainerPlayer({
           <div className={styles.surface} role="alert">
             <span className={styles.skeletonLabel}>
               <CircleAlert size={17} aria-hidden="true" />
-              {error}
+              {t(error)}
               <button
                 type="button"
                 className={styles.metaButton}
                 onClick={retry}
               >
-                Try again
+                {t("tryAgain")}
               </button>
             </span>
           </div>
@@ -497,7 +503,7 @@ export function ExplainerPlayer({
             onPointerLeave={endHold}
             onContextMenu={(event) => event.preventDefault()}
             disabled={!ready}
-            aria-label={playing ? "Pause explainer" : "Play explainer"}
+            aria-label={playing ? t("pauseExplainer") : t("playExplainer")}
           >
             <span className={styles.holdZone} data-side="start" />
             <span className={styles.holdZone} data-side="end" />
@@ -513,7 +519,7 @@ export function ExplainerPlayer({
               ) : (
                 <span className={styles.skeletonLabel}>
                   <ActivityMark />
-                  <span className={styles.shimmer}>Loading video</span>
+                  <span className={styles.shimmer}>{tv("loadingVideo")}</span>
                 </span>
               ))}
           </button>
@@ -531,7 +537,7 @@ export function ExplainerPlayer({
           className={styles.controlButton}
           onClick={toggle}
           disabled={!ready}
-          aria-label={playing ? "Pause" : "Play"}
+          aria-label={playing ? tv("pause") : tv("play")}
         >
           {playing ? <Pause size={18} /> : <Play size={18} />}
         </button>
@@ -544,7 +550,7 @@ export function ExplainerPlayer({
           step={0.05}
           defaultValue={0}
           disabled={!ready}
-          aria-label="Seek"
+          aria-label={tv("seek")}
           onChange={(event) => scrub(Number(event.target.value))}
           onKeyDown={onScrubberKey}
         />
@@ -556,8 +562,8 @@ export function ExplainerPlayer({
           type="button"
           className={`${styles.controlButton} ${styles.speedButton}`}
           onClick={cycleSpeed}
-          aria-label={`Playback speed ${speed}×, change`}
-          title="Playback speed"
+          aria-label={tv("speedChange", { speed })}
+          title={tv("speedTitle")}
         >
           {speed}×
         </button>
@@ -566,7 +572,7 @@ export function ExplainerPlayer({
           className={styles.controlButton}
           onClick={toggleCaptions}
           aria-pressed={captions}
-          aria-label={captions ? "Hide captions" : "Show captions"}
+          aria-label={t(captions ? "captionsHide" : "captionsShow")}
         >
           {captions ? <Captions size={18} /> : <CaptionsOff size={18} />}
         </button>
@@ -574,9 +580,9 @@ export function ExplainerPlayer({
           type="button"
           className={styles.controlButton}
           onClick={toggleFullscreen}
-          aria-label={
-            expanded || fullscreen ? "Exit full screen" : "Full screen"
-          }
+          aria-label={t(
+            expanded || fullscreen ? "fullscreenExit" : "fullscreenEnter",
+          )}
         >
           {expanded || fullscreen ? (
             <Minimize size={17} />

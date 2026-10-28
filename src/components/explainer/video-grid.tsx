@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Play, Star } from "lucide-react";
 import type { VideoCard } from "~/features/explainer/catalog-types";
 import { videoFileUrl } from "~/features/explainer/file-url";
@@ -44,11 +45,10 @@ function Poster({ card }: { card: VideoCard }) {
 
 /** Poster cards for every stored explainer video. */
 export function VideoGrid({ cards }: { cards: VideoCard[] }) {
+  const t = useTranslations("videosPage");
   if (!cards.length)
     return (
-      <p className="text-[hsl(var(--neo-soft-text))]">
-        No videos yet. Open any repository on GitDiagram and press Video.
-      </p>
+      <p className="text-[hsl(var(--neo-soft-text))]">{t("noVideosYet")}</p>
     );
   return (
     <ul className={styles.grid}>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type {
   VideoGenerationProgress,
   VideoGenerationStage,
@@ -90,6 +91,7 @@ export function GenerationRows({
   progress: VideoGenerationProgress;
 }) {
   const at = ORDER.indexOf(stage);
+  const t = useTranslations("explainer");
   const state = (step: VideoGenerationStage, done = false): RowState => {
     const index = ORDER.indexOf(step);
     if (done || index < at) return "done";
@@ -101,29 +103,34 @@ export function GenerationRows({
   const designDone = Boolean(scenes && designed >= scenes);
   const voiceDone = Boolean(scenes && voiced >= scenes);
   return (
-    <ol className={styles.rows} aria-label="Progress">
+    <ol className={styles.rows} aria-label={t("progress.aria")}>
       <Row
         index={0}
         state={state("reading")}
-        label="Read the code"
+        label={t("progress.read")}
         metric={
           progress.sourceFiles !== undefined
-            ? `${progress.sourceFiles} files`
+            ? t("progress.files", { count: progress.sourceFiles })
             : undefined
         }
       />
       <Row
         index={1}
         state={state("planning")}
-        label="Write the script"
+        label={t("progress.write")}
         metric={
-          scenes ? `${scenes} scenes · ${progress.words} words` : undefined
+          scenes
+            ? t("progress.scenesWords", {
+                scenes,
+                words: progress.words ?? 0,
+              })
+            : undefined
         }
       />
       <Row
         index={2}
         state={at < 2 ? "pending" : at > 2 || designDone ? "done" : "running"}
-        label="Design the scenes"
+        label={t("progress.design")}
         metric={scenes ? `${designed}/${scenes}` : undefined}
         count={designed}
         total={scenes}
@@ -132,9 +139,9 @@ export function GenerationRows({
       <Row
         index={3}
         state={at < 2 ? "pending" : at > 2 || voiceDone ? "done" : "running"}
-        label="Record the narration"
+        label={t("progress.record")}
       />
-      <Row index={4} state={state("saving")} label="Save the video" />
+      <Row index={4} state={state("saving")} label={t("progress.save")} />
     </ol>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { BrowseCatalogControls } from "~/components/browse-catalog-controls";
 import { BrowseCatalogPagination } from "~/components/browse-catalog-pagination";
@@ -47,6 +48,8 @@ async function loadVideoPage(
  * for from the server, so the browser never holds the whole catalog.
  */
 export function VideoCatalog({ initial }: { initial: VideoPage }) {
+  const t = useTranslations("videosPage");
+  const tb = useTranslations("browse");
   const [query, setQuery] = useState<VideoQuery>(() =>
     normalizeBrowseQuery({}),
   );
@@ -149,10 +152,10 @@ export function VideoCatalog({ initial }: { initial: VideoPage }) {
           className="neo-panel rounded-lg px-5 py-8 text-center sm:p-10"
         >
           <h2 className="text-2xl font-bold sm:text-3xl">
-            The videos could not be loaded
+            {t("videosLoadFailed")}
           </h2>
           <p className="mt-4 text-base text-[hsl(var(--neo-soft-text))] dark:text-neutral-300">
-            Try again in a moment.
+            {t("videosLoadRetry")}
           </p>
         </div>
       ) : !loading && result.total === 0 ? (
@@ -161,10 +164,10 @@ export function VideoCatalog({ initial }: { initial: VideoPage }) {
             Watch
           </p>
           <h2 className="mt-3 text-2xl font-bold sm:text-3xl">
-            No videos match these filters
+            {t("noVideosMatch")}
           </h2>
           <p className="mt-4 text-base text-[hsl(var(--neo-soft-text))] dark:text-neutral-300">
-            Try a broader search or lower the minimum star filter.
+            {tb("catalog.noMatchHint")}
           </p>
         </div>
       ) : (

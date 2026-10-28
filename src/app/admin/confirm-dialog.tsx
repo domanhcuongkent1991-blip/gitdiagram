@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Dialog,
@@ -47,11 +48,12 @@ export function ConfirmDialog({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const tCommon = useTranslations("admin.common");
 
   async function confirm() {
     setBusy(true);
     setError(null);
-    const failure = await onConfirm().catch(() => "Something went wrong.");
+    const failure = await onConfirm().catch(() => tCommon("somethingWrong"));
     setBusy(false);
     if (failure) {
       setError(failure);

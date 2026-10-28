@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 import { ArrowUpRight, GitBranch, Square } from "lucide-react";
+import { useTranslations } from "next-intl";
 import styles from "./workspace.module.css";
 
 export function RepositorySource({
@@ -15,6 +16,7 @@ export function RepositorySource({
   onCancel: () => void;
   onRetry: () => void;
 }) {
+  const t = useTranslations("generation");
   const [owner, name] = repository.split("/");
   return (
     <div className={styles.source}>
@@ -34,14 +36,14 @@ export function RepositorySource({
             ref={stopRef}
             type="button"
             className={styles.stop}
-            aria-label="Stop generation"
+            aria-label={t("source.stop")}
             onClick={onCancel}
           >
             <Square size={12} fill="currentColor" aria-hidden="true" />
           </button>
         ) : (
           <button type="button" className={styles.primary} onClick={onRetry}>
-            Try again <ArrowUpRight size={15} aria-hidden="true" />
+            {t("source.tryAgain")} <ArrowUpRight size={15} aria-hidden="true" />
           </button>
         )}
       </div>

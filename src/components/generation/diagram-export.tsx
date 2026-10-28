@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   ChevronDown,
   Code2,
@@ -34,6 +35,7 @@ export function DiagramExport({
   /** Offered only for a stored public diagram. */
   readme?: { owner: string; repo: string };
 }) {
+  const t = useTranslations("generation.export");
   const [open, setOpen] = useState(false);
   const [pointerMotion, setPointerMotion] = useState(false);
   const container = useRef<HTMLDivElement>(null);
@@ -96,7 +98,7 @@ export function DiagramExport({
         id={id}
         className={styles.exportMenu}
         role="group"
-        aria-label="Export diagram"
+        aria-label={t("menu")}
         data-open={open}
         data-motion={pointerMotion}
         aria-hidden={!open}
@@ -105,11 +107,11 @@ export function DiagramExport({
         <TooltipProvider delayDuration={350} skipDelayDuration={300}>
           <div className={styles.exportOptions}>
             <ExportAction
-              label="Download PNG"
-              successLabel="Downloaded"
-              announcement="PNG downloaded"
-              description="Save a high-resolution image of the diagram"
-              errorMessage="Download failed. Try again."
+              label={t("downloadPng")}
+              successLabel={t("downloaded")}
+              announcement={t("pngDownloaded")}
+              description={t("pngDescription")}
+              errorMessage={t("downloadFailed")}
               icon={ImageDown}
               onAction={async () => {
                 const svg = getSvg();
@@ -123,11 +125,11 @@ export function DiagramExport({
               }}
             />
             <ExportAction
-              label="Copy Mermaid"
-              successLabel="Copied"
-              announcement="Mermaid copied"
-              description="Copy the editable Mermaid diagram code"
-              errorMessage="Copy failed. Try again."
+              label={t("copyMermaid")}
+              successLabel={t("copied")}
+              announcement={t("mermaidCopied")}
+              description={t("mermaidDescription")}
+              errorMessage={t("copyFailed")}
               icon={Copy}
               onAction={async () => {
                 await navigator.clipboard.writeText(
@@ -139,20 +141,20 @@ export function DiagramExport({
             {readme && (
               <>
                 <ExportAction
-                  label="README picture"
-                  successLabel="Copied"
-                  announcement="README picture copied"
-                  description="Copy Markdown for a picture of this diagram that opens it. It updates when the diagram does."
-                  errorMessage="Copy failed. Try again."
+                  label={t("readmePicture")}
+                  successLabel={t("copied")}
+                  announcement={t("readmePictureCopied")}
+                  description={t("readmePictureDescription")}
+                  errorMessage={t("copyFailed")}
                   icon={ImageIcon}
                   onAction={() => copyReadme("picture")}
                 />
                 <ExportAction
-                  label="README badge"
-                  successLabel="Copied"
-                  announcement="README badge copied"
-                  description="Copy Markdown for a README badge that opens this diagram"
-                  errorMessage="Copy failed. Try again."
+                  label={t("readmeBadge")}
+                  successLabel={t("copied")}
+                  announcement={t("readmeBadgeCopied")}
+                  description={t("readmeBadgeDescription")}
+                  errorMessage={t("copyFailed")}
                   icon={Code2}
                   onAction={() => copyReadme("badge")}
                 />

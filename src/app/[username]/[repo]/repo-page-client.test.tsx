@@ -148,6 +148,17 @@ describe("RepoPageClient", () => {
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
     expect(retry).toHaveBeenCalledOnce();
   });
+  it("offers the AI key path when the rate limit mentions a key", () => {
+    setup({
+      status: "error",
+      error: "The API key was rejected.",
+      errorCode: "RATE_LIMITED",
+    });
+    render(<RepoPageClient username="Acme" repo="Demo" />);
+    expect(
+      screen.getByRole("button", { name: "Use Your AI Key" }),
+    ).toBeInTheDocument();
+  });
   it.each([
     ["REPOSITORY_NOT_FOUND", "Private repository?"],
     ["GITHUB_AUTH_REQUIRED", "This repository needs GitHub access"],

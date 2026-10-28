@@ -30,6 +30,7 @@ vi.mock("~/server/storage/artifact-store", () => ({ getStoredDiagramState }));
 vi.mock("./repo-page-client", () => ({ default: () => null }));
 
 import { JsonLd } from "~/components/json-ld";
+import { RepositoryReadout } from "~/components/generation/repository-readout";
 import RepoPageClient from "./repo-page-client";
 import Repo, { generateMetadata } from "./page";
 import { PlaceholderRepo } from "./placeholder-repo";
@@ -193,7 +194,16 @@ describe("repository page", () => {
         params: Promise.resolve({ username: "acme", repo: "demo" }),
       }),
     );
-    const html = renderToStaticMarkup(<>{client.props.readout}</>);
+    // RepositoryReadout is an async server component; call it directly and
+    // render the resolved element.
+    const readoutElement = client.props.readout as ReactElement<{
+      repository: string;
+      readout: Parameters<typeof RepositoryReadout>[0]["readout"];
+      markdownPath: string;
+    }>;
+    const html = renderToStaticMarkup(
+      await RepositoryReadout(readoutElement.props),
+    );
 
     expect(html).toContain("How acme/demo works");
     expect(html).toContain("Demo is a small service that stores notes.");

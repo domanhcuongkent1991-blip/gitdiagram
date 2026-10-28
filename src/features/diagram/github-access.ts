@@ -11,3 +11,8 @@ export function githubAccessTitle(errorCode?: string) {
     ? ACCESS_TITLES[errorCode]
     : undefined;
 }
+
+/** Whether the error code has a user-facing GitHub access title. */
+export function hasGithubAccessTitle(errorCode?: string) {
+  return Boolean(errorCode && Object.hasOwn(ACCESS_TITLES, errorCode));
+}
