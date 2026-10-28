@@ -185,6 +185,8 @@
     "fileRead": "{count} tệp mã nguồn đã đọc",
     "filesRead": "{count} tệp mã nguồn đã đọc",
     "architectureAnalyzed": "Đã phân tích kiến trúc",
+    "graphSummary": "{components} thành phần · {connections} kết nối",
+    "info": "Thông tin",
     "addGithubAccess": "Thêm quyền truy cập GitHub",
     "useAiKey": "Dùng API key của bạn",
     "openOnGithub": "Mở repo trên GitHub",
@@ -654,6 +656,7 @@
     "regenerate": "Tạo lại",
     "regenerateVideo": "Tạo lại video",
     "beingMade": "Video này đang được tạo ngay bây giờ",
+    "appearSoon": "Video sẽ xuất hiện tại đây ngay khi xong, thường trong một đến hai phút.",
     "stage": {
       "reading": "Đọc mã nguồn",
       "planning": "Viết kịch bản",

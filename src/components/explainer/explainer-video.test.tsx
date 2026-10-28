@@ -294,6 +294,7 @@ describe("ExplainerVideo refusals", () => {
     expect(
       await screen.findByText("This video is being made right now"),
     ).toBeTruthy();
+    expect(screen.getByText(/as soon as it is ready/)).toBeTruthy();
   });
 });
 

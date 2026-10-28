@@ -61,8 +61,10 @@ export function GenerationActivity({
         {state.graph && (
           <div className={styles.detailRow}>
             <GitBranch size={14} aria-hidden="true" />
-            {state.graph.nodes.length} components · {state.graph.edges.length}{" "}
-            connections
+            {t("graphSummary", {
+              components: state.graph.nodes.length,
+              connections: state.graph.edges.length,
+            })}
           </div>
         )}
       </div>
@@ -80,6 +82,7 @@ export function GenerationActivity({
 }
 
 export function ExpandedActivity({ state }: { state: DiagramStreamState }) {
+  const t = useTranslations("generation");
   const [expanded, setExpanded] = useState(true);
   if (!state.explanation && state.sourceFileCount === undefined && !state.graph)
     return null;
@@ -90,7 +93,7 @@ export function ExpandedActivity({ state }: { state: DiagramStreamState }) {
       onToggle={(event) => setExpanded(event.currentTarget.open)}
     >
       <summary>
-        Info <ChevronDown size={12} aria-hidden="true" />
+        {t("info")} <ChevronDown size={12} aria-hidden="true" />
       </summary>
       <div className={styles.detailBody}>
         <GenerationActivity state={state} />

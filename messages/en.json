@@ -185,6 +185,8 @@
     "fileRead": "{count} source file read",
     "filesRead": "{count} source files read",
     "architectureAnalyzed": "Architecture analyzed",
+    "graphSummary": "{components} components · {connections} connections",
+    "info": "Info",
     "addGithubAccess": "Add GitHub access",
     "useAiKey": "Use Your AI Key",
     "openOnGithub": "Open repository on GitHub",
@@ -654,6 +656,7 @@
     "regenerate": "Regenerate",
     "regenerateVideo": "Regenerate video",
     "beingMade": "This video is being made right now",
+    "appearSoon": "It will appear here as soon as it is ready, usually in a minute or two.",
     "stage": {
       "reading": "Reading the code",
       "planning": "Writing the script",

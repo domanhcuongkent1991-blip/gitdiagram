@@ -400,10 +400,7 @@ export function ExplainerVideo({
             {t("beingMade")}
           </h2>
         </div>
-        <p className={controls.description}>
-          It will appear here as soon as it is ready, usually in a minute or
-          two.
-        </p>
+        <p className={controls.description}>{t("appearSoon")}</p>
       </div>
     );
 
